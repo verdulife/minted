@@ -14,61 +14,63 @@
 	let targetY = $state(0);
 
 	let isPointerDown = $state(false);
-	let lastPointerX = 0;
-	let pointerVelocity = 0;
-	let currentBaseRotationY = 0; // 0 o Math.PI
+	let currentBaseRotationY = $state(0); // 0 o Math.PI
+
+	let lastTapTime = 0;
 
 	function handlePointerDown(e: PointerEvent) {
 		isPointerDown = true;
-		lastPointerX = e.clientX;
-		pointerVelocity = 0;
+		(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+
+		// Manual Double Tap/Click detection
+		const now = Date.now();
+		const TIMESPAN = 300; // ms
+		if (now - lastTapTime < TIMESPAN) {
+			handleFlip();
+		}
+		lastTapTime = now;
+	}
+
+	function handleFlip() {
+		currentBaseRotationY = currentBaseRotationY === 0 ? Math.PI : 0;
+		targetY = currentBaseRotationY;
 	}
 
 	function handlePointerMove(e: PointerEvent) {
+		if (!isPointerDown) return;
+
 		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		// Coordenadas normalizadas de -0.5 a 0.5
 		const x = (e.clientX - rect.left) / rect.width - 0.5;
 		const y = (e.clientY - rect.top) / rect.height - 0.5;
 
-		if (!isPointerDown) {
-			// Tilt suave (hover)
-			targetY = currentBaseRotationY + x * 0.4;
-			targetX = y * 0.4;
-			return;
-		}
-
-		// Drag activo
-		const deltaX = e.clientX - lastPointerX;
-		pointerVelocity = deltaX;
-		lastPointerX = e.clientX;
-		targetY += deltaX * 0.01;
+		// Limitamos la inclinación (aprox ±30 grados = 0.5 rad)
+		const limit = 0.5;
+		targetX = y * limit * 2;
+		targetY = currentBaseRotationY + x * limit * 2;
 	}
 
-	function handlePointerUp() {
+	function handlePointerUp(e: PointerEvent) {
 		isPointerDown = false;
-
-		// Flick detection
-		if (Math.abs(pointerVelocity) > 12) {
-			const direction = pointerVelocity > 0 ? 1 : -1;
-			currentBaseRotationY += Math.PI * direction;
-		}
-
-		// Snap
-		currentBaseRotationY = Math.round(currentBaseRotationY / Math.PI) * Math.PI;
-		targetY = currentBaseRotationY;
+		(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+		// Volver a la posición de reposo
 		targetX = 0;
+		targetY = currentBaseRotationY;
 	}
 </script>
 
 <div
-	class="relative h-full w-full cursor-grab select-none active:cursor-grabbing"
+	role="button"
+	tabindex="0"
+	aria-label="Visualizador de tarjeta 3D"
+	class="touch-action-none relative h-full w-full cursor-grab select-none active:cursor-grabbing"
+	style="touch-action: none;"
 	onpointerdown={handlePointerDown}
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointerleave={handlePointerUp}
 >
-	<Canvas
-		
-	>
+	<Canvas>
 		<T.PerspectiveCamera makeDefault position={[0, 0, 7]} fov={50} />
 		<T.Color attach="background" args={['#111']} />
 		<Environment url="/textures/studio_small_08.hdr" isBackground={false} />
@@ -80,6 +82,6 @@
 		class="pointer-events-none absolute right-6 bottom-6 flex items-center gap-2 text-[10px] tracking-widest text-white/10 uppercase"
 	>
 		<span class="inline-block h-px w-4 bg-white/10"></span>
-		Desliza rápido para voltear
+		Doble click para voltear
 	</div>
 </div>

@@ -4,6 +4,7 @@
 
 	interface Props {
 		card: Card;
+		activeTab: 'mine' | 'received';
 		onClick?: (card: Card) => void;
 	}
 

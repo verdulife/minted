@@ -8,50 +8,54 @@
 	$: activeRoute = $page.url.pathname;
 </script>
 
-<footer class="fixed right-0 bottom-0 left-0 z-50 w-full border-t border-gray-200 bg-white">
+<footer class="fixed right-0 bottom-0 left-0 z-50 w-full border-t border-light/10 bg-dark">
 	<nav>
-		<ul class="mx-auto grid max-w-64 grid-cols-4 gap-12">
+		<ul class="flex justify-center gap-3">
 			<li>
 				<a
 					href="/"
-					class="flex items-center justify-center py-6 opacity-50"
+					class="flex flex-col items-center justify-end gap-2 px-5 py-3 opacity-50"
 					class:opacity-100={activeRoute === '/'}
 					title="Inicio"
 				>
-					<HomeIcon class="size-6" />
+					<HomeIcon class="size-5" />
+					<p class="text-xs">Inicio</p>
 				</a>
 			</li>
 
 			<li>
 				<a
 					href="/create"
-					class="flex items-center justify-center py-6 opacity-50"
+					class="flex flex-col items-center justify-end gap-2 px-5 py-3 opacity-50"
 					class:opacity-100={activeRoute === '/create'}
 					title="Crear"
 				>
-					<CreateIcon class="size-6" />
+					<CreateIcon class="size-5" />
+					<p class="text-xs">Crear</p>
 				</a>
 			</li>
 
 			<li>
 				<a
-					href="/collection"
-					class="flex items-center justify-center py-6 opacity-50"
-					class:opacity-100={activeRoute === '/collection'}
+					href="/get"
+					class="flex flex-col items-center justify-end gap-2 px-5 py-3 opacity-50"
+					class:opacity-100={activeRoute === '/get'}
 					title="Colección"
 				>
-					<CollectionIcon class="size-6" />
+					<CollectionIcon class="size-5" />
+					<p class="text-xs">Obtener</p>
 				</a>
 			</li>
 
 			<li>
 				<a
 					href="/settings"
-					class="flex items-center justify-center py-6 opacity-50"
+					class="flex flex-col items-center justify-end gap-2 px-5 py-3 opacity-50"
 					class:opacity-100={activeRoute === '/settings'}
 					title="Ajustes"
 				>
-					<UserIcon class="size-6" />
+					<UserIcon class="size-5" />
+					<p class="text-xs">Ajustes</p>
 				</a>
 			</li>
 		</ul>

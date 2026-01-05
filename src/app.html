@@ -1,14 +1,15 @@
 <!doctype html>
 <html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, minimum-scale=1.0, viewport-fit=cover"
+		/>
+		%sveltekit.head%
+	</head>
 
-<head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, viewport-fit=cover" />
-	%sveltekit.head%
-</head>
-
-<body class="overflow-x-clip flex flex-col" data-sveltekit-preload-data="hover">
-	<div class="contents">%sveltekit.body%</div>
-</body>
-
+	<body class="overflow-x-clip bg-dark text-light" data-sveltekit-preload-data="hover">
+		<div class="contents">%sveltekit.body%</div>
+	</body>
 </html>

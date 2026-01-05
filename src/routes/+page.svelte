@@ -1,123 +1,117 @@
 <script lang="ts">
-	import { type Card, AppDatabase } from '@/lib/db';
-	import { identity } from '@/lib/stores';
-
-	import QRScanner from '@/lib/components/QRScanner.svelte';
+	import { db } from '$lib/db';
+	import { liveQuery } from 'dexie';
+	import CollectionGrid from '$lib/components/ui/CollectionGrid.svelte';
 	import Scene from '@/lib/components/3d/Scene.svelte';
+	import type { Card } from '$lib/db';
+	import Logo from '@/lib/assets/Logo.svelte';
 
-	let testCard: Card | null = $state(null);
-	let qrDataURL: string | null = $state(null);
-	let showScanner = $state(false);
-	let scannedCard: Card | null = $state(null);
-	let scanError: string | null = $state(null);
+	// Queries reactivas usando Dexie liveQuery
+	let myCards = liveQuery(() => db.table('myCards').toArray());
+	let receivedCards = liveQuery(() => db.table('receivedCards').toArray());
 
-	function openScanner() {
-		showScanner = true;
-		scannedCard = null;
-		scanError = null;
+	let activeTab = $state<'mine' | 'received'>('mine');
+	let selectedCard = $state<Card | null>(null);
+
+	// Derivamos las cartas a mostrar según la pestaña y el filtro
+	let currentCards = $derived(() => {
+		return activeTab === 'mine' ? $myCards || [] : $receivedCards || [];
+	});
+
+	function handleCardClick(card: Card) {
+		selectedCard = card;
 	}
 
-	function handleCardScanned(card: Card) {
-		scannedCard = card;
-		console.log('✅ Carta escaneada y guardada:', card);
-	}
-
-	function handleScanError(error: string) {
-		scanError = error;
-		console.error('❌ Error escaneando:', error);
-	}
-
-	function closeScanner() {
-		showScanner = false;
+	function closeDetail() {
+		selectedCard = null;
 	}
 </script>
 
-<div class="min-h-screen bg-linear-to-br from-purple-900 via-black to-blue-900 p-8 text-white">
-	<div class="mx-auto max-w-4xl space-y-6">
-		<h1
-			class="mb-8 bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-4xl font-bold text-transparent"
-		>
-			MINTED
-		</h1>
+<div class="min-h-dvh">
+	<!-- HEADER -->
+	<header class="sticky top-0 z-30 border-b border-light/10 bg-dark p-6">
+		<div class="flex items-center justify-between">
+			<Logo class="h-6" />
+		</div>
 
-		<!-- Panel de Identidad -->
-		{#if $identity}
-			<!-- Panel de Prueba de Criptografía -->
-			<div class="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-md">
-				<h2 class="mb-4 text-2xl font-semibold text-blue-400">Prueba de Firma Digital</h2>
-
-				<div class="flex flex-wrap gap-4">
-					<a
-						href="/create"
-						class="inline-block rounded-lg bg-linear-to-r from-purple-500 to-pink-500 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-purple-600 hover:to-pink-600 hover:shadow-purple-500/20"
-					>
-						Crear Nueva Carta
-					</a>
-
-					<a
-						href="/collection"
-						class="inline-block rounded-lg border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
-					>
-						Ver Mi Colección
-					</a>
-				</div>
-			</div>
-
-			<!-- Panel de Escáner -->
-			<div class="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-md">
-				<h2 class="mb-4 text-2xl font-semibold text-cyan-400">Recibir Cartas</h2>
-
-				<button
-					onclick={openScanner}
-					class="rounded-lg bg-linear-to-r from-cyan-500 to-blue-500 px-6 py-3 font-semibold transition-all hover:from-cyan-600 hover:to-blue-600"
-				>
-					Escanear Código QR
-				</button>
-
-				{#if scannedCard}
-					<div class="mt-4 h-100 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-						<Scene card={scannedCard} />
-					</div>
-
-					<div class="mt-4 rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-						<h3 class="mb-2 text-lg font-semibold text-green-400">Carta Recibida</h3>
-						<div class="space-y-1 text-sm text-gray-300">
-							<p><span class="text-gray-400">Título:</span> {scannedCard.title}</p>
-							<p><span class="text-gray-400">Descripción:</span> {scannedCard.description}</p>
-							<p><span class="text-gray-400">Rareza:</span> {scannedCard.visualConfig.rarity}</p>
-							<p><span class="text-gray-400">Efecto:</span> {scannedCard.visualConfig.effect}</p>
-						</div>
-						<p class="mt-2 text-xs text-gray-400">
-							Verifica en IndexedDB → MintedDB → receivedCards
-						</p>
-					</div>
-				{/if}
-
-				{#if scanError}
-					<div class="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
-						<h3 class="mb-2 text-lg font-semibold text-red-400">Error</h3>
-						<p class="text-sm text-gray-300">{scanError}</p>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div class="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-6 backdrop-blur-md">
-				<p class="text-yellow-400">Generando identidad...</p>
-			</div>
-		{/if}
-
-		<div class="mt-12 flex justify-center">
+		<!-- TABS -->
+		<div class="mx-auto mt-6 flex max-w-md rounded-full bg-light/5 p-1 ring-1 ring-light/10">
 			<button
-				onclick={AppDatabase.resetDatabase}
-				class="rounded px-4 py-2 text-xs text-red-400 underline transition-colors hover:bg-red-500/10 hover:text-red-300"
+				onclick={() => (activeTab = 'mine')}
+				class="flex-1 rounded-full py-2 text-sm font-semibold transition-all"
+				class:bg-light={activeTab === 'mine'}
+				class:text-dark={activeTab === 'mine'}
+				class:text-neutral-400={activeTab !== 'mine'}
 			>
-				⚠️ Reset App & Database
+				Mías ({($myCards || []).length})
+			</button>
+			<button
+				onclick={() => (activeTab = 'received')}
+				class="flex-1 rounded-full py-2 text-sm font-semibold transition-all"
+				class:bg-light={activeTab === 'received'}
+				class:text-dark={activeTab === 'received'}
+				class:text-neutral-400={activeTab !== 'received'}
+			>
+				Recibidas ({($receivedCards || []).length})
 			</button>
 		</div>
-	</div>
+	</header>
+
+	<main class="mx-auto max-w-6xl pb-24">
+		<!-- GRID -->
+		<CollectionGrid cards={currentCards()} {activeTab} onCardClick={handleCardClick} />
+	</main>
+
+	<!-- DETAIL MODAL (MODO 3D) -->
+	{#if selectedCard}
+		<div
+			class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl"
+		>
+			<!-- Close Header -->
+			<div class="absolute top-0 right-0 left-0 flex items-center justify-between p-6">
+				<button
+					onclick={closeDetail}
+					class="h-10 w-10 rounded-full bg-white/10 text-xl transition-all hover:bg-white/20"
+					>✕</button
+				>
+				<h2 class="text-lg font-bold tracking-widest text-white/50 uppercase">
+					{selectedCard.title}
+				</h2>
+				<div class="w-10"></div>
+			</div>
+
+			<!-- 3D Scene -->
+			<div class="h-[60dvh] w-full">
+				<Scene card={selectedCard} />
+			</div>
+
+			<!-- Meta & Actions -->
+			<div class="w-full max-w-md space-y-4 p-8 text-center">
+				<p class="text-sm text-gray-400 italic">"{selectedCard.description}"</p>
+
+				<div class="flex gap-4 pt-4">
+					<button
+						class="flex-1 rounded-xl border border-white/20 bg-white/5 py-4 font-bold text-white transition-all hover:bg-white/10"
+					>
+						BORRAR
+					</button>
+					<button
+						class="flex-2 rounded-xl bg-white py-4 font-bold text-black transition-all hover:bg-gray-200"
+					>
+						COMPARTIR QR
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
 
-<!-- Modal de Escáner -->
-{#if showScanner}
-	<QRScanner onCardScanned={handleCardScanned} onError={handleScanError} onClose={closeScanner} />
-{/if}
+<style>
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+</style>

@@ -15,10 +15,8 @@ export interface Card {
   title: string;
   description: string;
   visualConfig: {
-    rarity: 'common' | 'rare' | 'legendary';
-    effect: 'standard' | 'holographic' | 'gold';
+    effect: 'plastic' | 'metalized' | 'holographic' | 'mirror';
     color: string;
-    image?: string; // DataURL o URL de la imagen
   };
   issuerPublicKey: JsonWebKey;
   signature: string;

@@ -1,16 +1,30 @@
 <script lang="ts">
 	import type { Card } from '@/lib/db';
 	import { T, useTask } from '@threlte/core';
+	import { useTexture } from '@threlte/extras';
 	import * as THREE from 'three';
-	import { createCardTexture } from '@/lib/utils/cardTexture';
-	import { Text } from '@threlte/extras';
 	import CardFrame from './CardFrame.svelte';
 	import CardTitle from './CardTitle.svelte';
 	import CardDescription from './CardDescription.svelte';
+	import CardLogo from './CardLogo.svelte';
 
-	let { card, targetX = 0, targetY = 0, isInteracting = false } = $props();
+	interface Props {
+		card: Card;
+		targetX?: number;
+		targetY?: number;
+		isInteracting?: boolean;
+	}
 
-	// Estado interno para la rotación animada
+	let { card, targetX = 0, targetY = 0, isInteracting = false }: Props = $props();
+
+	const roughnessMap = useTexture('/textures/roughness.jpg', {
+		transform: (t) => {
+			t.wrapS = t.wrapT = THREE.RepeatWrapping;
+			t.repeat.set(1, 1.4);
+			return t;
+		}
+	});
+
 	let rotationX = $state(0);
 	let rotationY = $state(0);
 
@@ -33,26 +47,6 @@
 
 	const extrudeSettings = { depth, bevelEnabled: false };
 
-	// Generar textura
-	let texture: THREE.CanvasTexture | null = $state(null);
-
-	$effect(() => {
-		if (card) {
-			let active = true;
-			createCardTexture(card).then((t) => {
-				if (active) {
-					if (texture) texture.dispose();
-					texture = t;
-				} else {
-					t.dispose();
-				}
-			});
-			return () => {
-				active = false;
-			};
-		}
-	});
-
 	// Lógica de suavizado (Lerp)
 	useTask(() => {
 		const lerpFactor = 0.1;
@@ -67,22 +61,34 @@
 	});
 </script>
 
-<T.Group rotation={[rotationX, rotationY, 0]} position={[0, 0.5, 0]}>
+<T.Group rotation={[rotationX, rotationY, 0]} position={[0, 0.75, 0]}>
 	{#if card}
 		<T.Mesh>
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
 			<T.MeshPhysicalMaterial
-				color="gold"
-				roughness={0.25}
-				metalness={1}
+				color={card.visualConfig.color}
+				roughness={0.6}
+				metalness={0.8}
 				clearcoat={1}
 				clearcoatRoughness={0.05}
+				roughnessMap={$roughnessMap}
 			/>
 		</T.Mesh>
 
-		<CardFrame {width} {height} {radius} {depth} color="gold" metalness={1} roughness={0} />
+		<CardFrame
+			{width}
+			{height}
+			{radius}
+			{depth}
+			color={card.visualConfig.color}
+			metalness={1}
+			roughness={0}
+		/>
 
-		<CardTitle text="CHARIZARD VMAX" position={[-1, 1, 0.01]} size={0.025} color="black" />
-		<CardDescription></CardDescription>
+		<CardTitle text={card.title} />
+
+		<CardDescription text={card.description} />
+
+		<CardLogo color={card.visualConfig.color} />
 	{/if}
 </T.Group>

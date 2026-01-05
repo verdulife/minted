@@ -1,19 +1,18 @@
 <script lang="ts">
+	import type { Card } from '@/lib/db';
 	import { goto } from '$app/navigation';
 	import { identity } from '@/lib/stores';
 	import { createAndMintCard } from '@/lib/crypto';
 	import Scene from '@/lib/components/3d/Scene.svelte';
-	import RaritySelector from '@/lib/components/ui/RaritySelector.svelte';
-	import type { Card } from '@/lib/db';
 
 	// --- Estado ---
 	let step: 'editor' | 'preview' = $state('editor');
 
 	// Inputs del usuario
-	let title = $state('Carta de ejemplo');
-	let description = $state('Descripcion de la carta...');
-	let rarity: 'common' | 'rare' | 'legendary' = $state('common');
-	let color = $state('#cccccc');
+	let title = $state('Ejemplo de valor de carta');
+	let description = $state('Ejemplo de anotaciones con un texto ligeramente largo.');
+	let color = $state('tomato');
+	let effect: 'plastic' | 'metalized' | 'holographic' | 'mirror' = $state('plastic');
 
 	let isMinting = $state(false);
 
@@ -22,21 +21,12 @@
 		id: 'preview',
 		title: 'Título de Carta',
 		description: 'Descripción...',
-		visualConfig: { rarity: 'common', effect: 'standard', color: '#cccccc' },
+		visualConfig: { effect: 'plastic', color: 'tomato' },
 		issuerPublicKey: { kty: 'OKP', crv: 'Ed25519', x: '', y: '' } as JsonWebKey,
 		signature: '',
 		createdAt: Date.now(),
 		used: false
-	} as unknown as Card);
-
-	// Actualizar color por defecto al cambiar rareza (solo si estamos en editor)
-	$effect(() => {
-		if (step === 'editor') {
-			if (rarity === 'common') color = '#cccccc';
-			if (rarity === 'rare') color = '#3b82f6';
-			if (rarity === 'legendary') color = '#eab308';
-		}
-	});
+	} as Card);
 
 	function handleGeneratePreview() {
 		if (!title) {
@@ -49,11 +39,10 @@
 			title,
 			description,
 			visualConfig: {
-				rarity,
-				effect: 'standard',
+				effect,
 				color
 			}
-		} as unknown as Card; // Casting necesario por tipo parcial
+		} as Card;
 
 		step = 'preview';
 	}
@@ -82,141 +71,178 @@
 	}
 </script>
 
-<div class="relative h-dvh w-full overflow-hidden bg-[#050505] font-sans text-white">
-	<!-- BACKGROUND: Escena 3D (Fullscreen) -->
-	<div
-		class="absolute inset-0 z-0 h-dvh w-full transition-all duration-700"
-		class:blur-md={step === 'editor'}
-		class:opacity-50={step === 'editor'}
-	>
-		<Scene card={previewCard} />
-	</div>
+<!-- IDEA:
+		 Tener como una store con presets de texto y estilos para las cartas.
+		 Ej. Cartas pareja con vale por una cena en pareja, un masaje, etc.
+-->
 
-	<!-- HEADER -->
-	<header
-		class="pointer-events-none absolute top-0 right-0 left-0 z-10 flex items-center justify-between p-6"
-	>
-		<div class="pointer-events-auto">
-			<a
-				href="/"
-				class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-xl backdrop-blur-md transition-colors hover:bg-white/20"
-			>
-				←
-			</a>
-		</div>
-		<h1 class="text-xl font-bold tracking-widest text-white/50 uppercase">Forja de Cartas</h1>
-		<div class="w-10"></div>
-	</header>
+<!-- TODO:
+		 Cambiar el color y el efecto por presets bien pensados para el contraste y la estetica general.
+-->
 
-	<!-- MODO EDITOR: Formulario Central -->
+<div class="relative min-h-svh overflow-clip">
 	{#if step === 'editor'}
-		<div class="absolute inset-0 z-20 flex items-center justify-center p-4">
-			<div
-				class="w-full max-w-md space-y-8 rounded-3xl border border-white/10 bg-black/80 p-8 shadow-2xl backdrop-blur-xl transition-all"
-			>
-				<div class="text-center">
-					<h2 class="mb-2 text-3xl font-bold text-white">Diseña tu Carta</h2>
-					<p class="text-sm text-gray-400">Define los atributos de tu nuevo coleccionable</p>
+		<header class="mt-6 border-b border-light/10 p-6">
+			<h1 class="mb-2 text-3xl font-bold text-white">Creador</h1>
+			<p class="text-sm text-neutral-400">Define los atributos tu nueva <strong>mint</strong></p>
+		</header>
+
+		<main class="flex flex-col gap-6 p-6">
+			<label class="flex flex-col gap-2">
+				<div class="flex items-end justify-between">
+					<p class="text-xs font-semibold text-neutral-400">Valor de la mint</p>
+					<p class="text-xs text-neutral-400">{title.length}/75</p>
 				</div>
 
-				<div class="space-y-6">
-					<!-- Título -->
-					<div>
-						<label
-							for="card-title"
-							class="mb-2 block text-xs font-bold tracking-wider text-gray-500 uppercase"
-							>Nombre</label
-						>
-						<input
-							id="card-title"
-							type="text"
-							bind:value={title}
-							placeholder="Ej. Dragón Etereo"
-							class="w-full border-b-2 border-white/20 bg-transparent px-0 py-2 text-xl font-bold text-white placeholder-gray-600 transition-colors focus:border-purple-500 focus:outline-none"
-							maxlength="25"
-						/>
-					</div>
+				<textarea
+					bind:value={title}
+					rows="2"
+					placeholder="Ej. Vale por una cena en pareja"
+					class="w-full resize-none rounded-lg border border-light/10 bg-light/5 p-3 font-medium placeholder-neutral-600 transition-colors focus:border-light/70 focus:outline-none"
+					maxlength="75"
+				></textarea>
+			</label>
 
-					<!-- Descripción -->
-					<div>
-						<label
-							for="card-desc"
-							class="mb-2 block text-xs font-bold tracking-wider text-gray-500 uppercase"
-							>Descripción / Lore</label
-						>
-						<textarea
-							id="card-desc"
-							bind:value={description}
-							placeholder="Cuenta su historia..."
-							rows="3"
-							class="w-full resize-none rounded-lg bg-white/5 p-4 text-sm text-gray-200 placeholder-gray-600 transition-colors focus:bg-white/10 focus:outline-none"
-							maxlength="140"
-						></textarea>
-						<div class="mt-1 text-right text-[10px] text-gray-600">{description.length}/140</div>
-					</div>
-
-					<!-- Rareza y Color -->
-					<div class="flex gap-4">
-						<div class="flex-1">
-							<label class="mb-2 block text-xs font-bold tracking-wider text-gray-500 uppercase"
-								>Rareza</label
-							>
-							<RaritySelector selected={rarity} onSelect={(r) => (rarity = r)} />
-						</div>
-						<div>
-							<label class="mb-2 block text-xs font-bold tracking-wider text-gray-500 uppercase"
-								>Color</label
-							>
-							<div class="h-10 w-full overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10">
-								<input
-									type="color"
-									bind:value={color}
-									class="-mt-1 -ml-1 h-12 w-[120%] cursor-pointer"
-								/>
-							</div>
-						</div>
-					</div>
+			<label class="flex flex-col gap-2">
+				<div class="flex items-end justify-between">
+					<p class="text-xs font-semibold text-neutral-400">Anotaciones</p>
+					<p class="text-xs text-neutral-400">{description.length}/140</p>
 				</div>
 
-				<button
-					onclick={handleGeneratePreview}
-					class="w-full rounded-xl bg-white py-4 text-lg font-bold text-black shadow-lg shadow-white/10 transition-all hover:scale-[1.02] hover:bg-gray-200 active:scale-[0.98]"
-				>
-					Generar Vista Previa →
-				</button>
+				<textarea
+					bind:value={description}
+					placeholder="Ej. Solo válido de lunes a sábado"
+					rows="4"
+					class="w-full resize-none rounded-lg border border-light/10 bg-light/5 p-3 font-medium placeholder-neutral-600 transition-colors focus:border-light/70 focus:outline-none"
+					maxlength="140"
+				></textarea>
+			</label>
+
+			<div class="flex flex-col gap-4">
+				<p class="text-xs font-semibold text-neutral-400">Color</p>
+
+				<div class="flex gap-2">
+					<!-- Rojo -->
+					<label
+						class="size-12 rounded-full border-light p-0.5"
+						class:border-2={color === 'tomato'}
+					>
+						<div class="flex size-full rounded-full bg-[tomato]"></div>
+						<input class="hidden" type="radio" bind:group={color} value="tomato" />
+					</label>
+
+					<!-- Azul -->
+					<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'blue'}>
+						<div class="flex size-full rounded-full bg-[blue]"></div>
+						<input class="hidden" type="radio" bind:group={color} value="blue" />
+					</label>
+
+					<!-- Dorado -->
+					<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'gold'}>
+						<div class="flex size-full rounded-full bg-[gold]"></div>
+						<input class="hidden" type="radio" bind:group={color} value="gold" />
+					</label>
+
+					<!-- Negro -->
+					<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'black'}>
+						<div class="flex size-full rounded-full bg-[#222]"></div>
+						<input class="hidden" type="radio" bind:group={color} value="black" />
+					</label>
+
+					<!-- Blanco -->
+					<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'white'}>
+						<div class="flex size-full rounded-full bg-[white]"></div>
+						<input class="hidden" type="radio" bind:group={color} value="white" />
+					</label>
+				</div>
 			</div>
-		</div>
+
+			<div class="flex flex-col gap-4">
+				<p class="text-xs font-semibold text-neutral-400">Efecto</p>
+
+				<div class="grid grid-cols-2 gap-2">
+					<!-- Plástico brillante -->
+					<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'plastic'}>
+						<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+							Plástico brillante
+						</div>
+						<input class="hidden" type="radio" bind:group={effect} value="plastic" />
+					</label>
+
+					<!-- Metalizado -->
+					<label
+						class="h-12 rounded-full border-light p-0.5"
+						class:border-2={effect === 'metalized'}
+					>
+						<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+							Metalizado
+						</div>
+						<input class="hidden" type="radio" bind:group={effect} value="metalized" />
+					</label>
+
+					<!-- Holográfico -->
+					<label
+						class="h-12 rounded-full border-light p-0.5"
+						class:border-2={effect === 'holographic'}
+					>
+						<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+							Holográfico
+						</div>
+						<input class="hidden" type="radio" bind:group={effect} value="holographic" />
+					</label>
+
+					<!-- Espejo -->
+					<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'mirror'}>
+						<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+							Espejo
+						</div>
+						<input class="hidden" type="radio" bind:group={effect} value="mirror" />
+					</label>
+				</div>
+			</div>
+
+			<button
+				onclick={handleGeneratePreview}
+				class="mb-20 rounded-lg bg-light py-4 font-semibold text-dark"
+			>
+				Ver carta
+			</button>
+		</main>
 	{/if}
 
 	<!-- MODO PREVIEW: Botones de Acción -->
 	{#if step === 'preview'}
-		<div
-			class="pointer-events-none absolute right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-end gap-4 bg-linear-to-t from-black via-black/80 to-transparent p-6 pt-24 pb-12"
-		>
-			<div class="pointer-events-auto flex w-full max-w-md gap-4">
-				<button
-					onclick={handleEdit}
-					class="flex-1 rounded-xl border border-white/20 bg-black/40 py-4 font-bold text-white backdrop-blur-md transition-all hover:bg-white/10"
-				>
-					← Editar
-				</button>
+		<div class="relative h-svh overflow-clip">
+			<Scene card={previewCard} />
 
-				<button
-					onclick={handleMint}
-					disabled={isMinting}
-					class="flex-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 py-4 font-bold text-white shadow-xl shadow-purple-900/40 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:grayscale"
-				>
-					{#if isMinting}
-						⏳ Forjando...
-					{:else}
-						✨ FORJAR CARTA FINAL
-					{/if}
-				</button>
+			<div
+				class="pointer-events-none absolute right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-end gap-4 bg-linear-to-t from-black via-black/80 to-transparent p-6 pt-24 pb-12"
+			>
+				<div class="pointer-events-auto flex w-full max-w-md gap-4">
+					<button
+						onclick={handleEdit}
+						class="flex-1 rounded-xl border border-white/20 bg-black/40 py-4 font-bold text-white backdrop-blur-md transition-all hover:bg-white/10"
+					>
+						← Editar
+					</button>
+
+					<button
+						onclick={handleMint}
+						disabled={isMinting}
+						class="flex-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 py-4 font-bold text-white shadow-xl shadow-purple-900/40 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:grayscale"
+					>
+						{#if isMinting}
+							⏳ Forjando...
+						{:else}
+							✨ FORJAR CARTA FINAL
+						{/if}
+					</button>
+				</div>
+
+				<p class="text-center text-xs text-gray-500">
+					Al forjar, se guardará en tu colección permanentemente.
+				</p>
 			</div>
-
-			<p class="text-center text-xs text-gray-500">
-				Gira la carta para inspeccionarla. Al forjar, se guardará en tu colección permanentemente.
-			</p>
 		</div>
 	{/if}
 </div>
