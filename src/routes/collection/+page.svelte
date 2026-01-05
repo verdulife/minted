@@ -2,7 +2,7 @@
 	import { db } from '$lib/db';
 	import { liveQuery } from 'dexie';
 	import CollectionGrid from '$lib/components/ui/CollectionGrid.svelte';
-	import Scene3D from '$lib/components/3d/Scene3D.svelte';
+	import Scene from '@/lib/components/3d/Scene.svelte';
 	import type { Card } from '$lib/db';
 
 	// Queries reactivas usando Dexie liveQuery
@@ -107,7 +107,7 @@
 
 			<!-- 3D Scene -->
 			<div class="h-[60dvh] w-full">
-				<Scene3D card={selectedCard} />
+				<Scene card={selectedCard} />
 			</div>
 
 			<!-- Meta & Actions -->

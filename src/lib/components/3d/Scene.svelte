@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Canvas, T } from '@threlte/core';
-	import Card3D from './Card3D.svelte';
 	import type { Card } from '@/lib/db';
+	import { Canvas, T } from '@threlte/core';
+	import { Environment, ContactShadows } from '@threlte/extras';
+	import CardModel from '@/lib/components/3d/Card.svelte';
 
 	interface Props {
 		card: Card;
@@ -65,14 +66,14 @@
 	onpointerup={handlePointerUp}
 	onpointerleave={handlePointerUp}
 >
-	<Canvas>
+	<Canvas
+		
+	>
 		<T.PerspectiveCamera makeDefault position={[0, 0, 7]} fov={50} />
-
-		<T.AmbientLight intensity={0.6} />
-		<T.DirectionalLight position={[5, 10, 7]} intensity={2.0} />
-		<T.PointLight position={[-5, 5, -5]} intensity={0.8} color="#4c1d95" />
-
-		<Card3D {card} {targetX} {targetY} isInteracting={isPointerDown} />
+		<T.Color attach="background" args={['#111']} />
+		<Environment url="/textures/studio_small_08.hdr" isBackground={false} />
+		<CardModel {card} {targetX} {targetY} isInteracting={isPointerDown} />
+		<ContactShadows position={[0, -2, 0]} opacity={0.6} scale={10} blur={2.5} far={4} />
 	</Canvas>
 
 	<div

@@ -1,13 +1,8 @@
-import tailwindcss from '@tailwindcss/vite';
-import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import { sveltekit } from '@sveltejs/kit/vite';
+import tailwindcss from '@tailwindcss/vite';
+import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit(), basicSsl()],
-  server: {
-    host: '0.0.0.0', // Escuchar en todas las interfaces de red
-    port: 5173,
-    strictPort: false
-  }
+  plugins: [tailwindcss(), sveltekit(), mkcert()],
 });

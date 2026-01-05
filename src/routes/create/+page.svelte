@@ -2,8 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { identity } from '@/lib/stores';
 	import { createAndMintCard } from '@/lib/crypto';
-	import { AppDatabase } from '@/lib/db';
-	import Scene3D from '@/lib/components/3d/Scene3D.svelte';
+	import Scene from '@/lib/components/3d/Scene.svelte';
 	import RaritySelector from '@/lib/components/ui/RaritySelector.svelte';
 	import type { Card } from '@/lib/db';
 
@@ -11,8 +10,8 @@
 	let step: 'editor' | 'preview' = $state('editor');
 
 	// Inputs del usuario
-	let title = $state('');
-	let description = $state('');
+	let title = $state('Carta de ejemplo');
+	let description = $state('Descripcion de la carta...');
 	let rarity: 'common' | 'rare' | 'legendary' = $state('common');
 	let color = $state('#cccccc');
 
@@ -90,7 +89,7 @@
 		class:blur-md={step === 'editor'}
 		class:opacity-50={step === 'editor'}
 	>
-		<Scene3D card={previewCard} />
+		<Scene card={previewCard} />
 	</div>
 
 	<!-- HEADER -->

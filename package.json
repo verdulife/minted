@@ -23,7 +23,6 @@
 		"@types/node": "^22",
 		"@types/qrcode": "^1.5.6",
 		"@types/three": "^0.182.0",
-		"@vitejs/plugin-basic-ssl": "^2.1.0",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",
@@ -36,7 +35,8 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
-		"vite": "^7.2.6"
+		"vite": "^7.2.6",
+		"vite-plugin-mkcert": "^1.17.9"
 	},
 	"dependencies": {
 		"@threlte/core": "^8.3.1",

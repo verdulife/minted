@@ -1,40 +1,15 @@
 <script lang="ts">
 	import { type Card, AppDatabase } from '@/lib/db';
-
 	import { identity } from '@/lib/stores';
-	import { onMount } from 'svelte';
-	import { createAndMintCard, verifyCardSignature } from '@/lib/crypto';
-	import { generateCardQR, downloadQRImage } from '@/lib/qr';
 
 	import QRScanner from '@/lib/components/QRScanner.svelte';
-	import Scene3D from '@/lib/components/3d/Scene3D.svelte';
+	import Scene from '@/lib/components/3d/Scene.svelte';
 
 	let testCard: Card | null = $state(null);
-	let verificationResult: boolean | null = $state(null);
 	let qrDataURL: string | null = $state(null);
 	let showScanner = $state(false);
 	let scannedCard: Card | null = $state(null);
 	let scanError: string | null = $state(null);
-
-	async function generateQR() {
-		if (!testCard) return;
-
-		isGeneratingQR = true;
-		try {
-			const qr = await generateCardQR(testCard);
-			qrDataURL = qr;
-			console.log('✅ QR generado');
-		} catch (error) {
-			console.error('❌ Error generando QR:', error);
-		} finally {
-			isGeneratingQR = false;
-		}
-	}
-
-	function downloadQR() {
-		if (!qrDataURL) return;
-		downloadQRImage(qrDataURL, `carta-${testCard?.id}.png`);
-	}
 
 	function openScanner() {
 		showScanner = true;
@@ -100,8 +75,8 @@
 				</button>
 
 				{#if scannedCard}
-					<div class="mt-4 h-[400px] overflow-hidden rounded-xl border border-white/10 bg-black/20">
-						<Scene3D card={scannedCard} />
+					<div class="mt-4 h-100 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+						<Scene card={scannedCard} />
 					</div>
 
 					<div class="mt-4 rounded-lg border border-green-500/30 bg-green-500/10 p-4">

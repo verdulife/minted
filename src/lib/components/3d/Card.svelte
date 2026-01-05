@@ -3,6 +3,10 @@
 	import { T, useTask } from '@threlte/core';
 	import * as THREE from 'three';
 	import { createCardTexture } from '@/lib/utils/cardTexture';
+	import { Text } from '@threlte/extras';
+	import CardFrame from './CardFrame.svelte';
+	import CardTitle from './CardTitle.svelte';
+	import CardDescription from './CardDescription.svelte';
 
 	let { card, targetX = 0, targetY = 0, isInteracting = false } = $props();
 
@@ -67,22 +71,18 @@
 	{#if card}
 		<T.Mesh>
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
-			<T.MeshStandardMaterial
-				color={card.visualConfig?.color || '#ffffff'}
-				roughness={0.4}
+			<T.MeshPhysicalMaterial
+				color="gold"
+				roughness={0.25}
 				metalness={1}
+				clearcoat={1}
+				clearcoatRoughness={0.05}
 			/>
 		</T.Mesh>
 
-		<T.Mesh position={[0, 0, depth + 0.001]}>
-			<T.PlaneGeometry args={[width - 0.2, height - 0.2]} />
-			<T.MeshStandardMaterial
-				map={texture}
-				transparent={true}
-				roughness={0.8}
-				metalness={1}
-				side={THREE.FrontSide}
-			/>
-		</T.Mesh>
+		<CardFrame {width} {height} {radius} {depth} color="gold" metalness={1} roughness={0} />
+
+		<CardTitle text="CHARIZARD VMAX" position={[-1, 1, 0.01]} size={0.025} color="black" />
+		<CardDescription></CardDescription>
 	{/if}
 </T.Group>
