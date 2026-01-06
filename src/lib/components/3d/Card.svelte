@@ -68,6 +68,8 @@
 	});
 </script>
 
+<!-- TODO: mejorar margenes y tamaños para el footer tenga espacio para la descripcion y añadir la fecha de caducidad -->
+
 <T.Group rotation={[rotationX, rotationY, 0]} position={[0, 0.75, 0]}>
 	{#if card}
 		<T.Mesh>
@@ -81,7 +83,6 @@
 				iridescence={1}
 				iridescenceIOR={1}
 				iridescenceThicknessRange={[0, 2400]}
-				transmission={0.5}
 				thickness={1}
 				attenuationDistance={0.5}
 			/>

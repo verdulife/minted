@@ -1,29 +1,41 @@
 <script lang="ts">
-	import type { Card } from '@/lib/db';
+	import { type Mint } from '@/lib/db';
 	import CardThumbnail from '@/lib/components/ui/CardThumbnail.svelte';
 
 	interface Props {
-		cards: Card[];
+		cards: Mint[];
 		activeTab: 'mine' | 'received';
-		onCardClick?: (card: Card) => void;
+		subTabActive: string;
+		onCardClick?: (card: Mint) => void;
 	}
 
-	let { cards, activeTab, onCardClick }: Props = $props();
+	let { cards, activeTab, subTabActive, onCardClick }: Props = $props();
+
+	console.log(subTabActive);
 </script>
 
 {#if cards.length === 0}
 	<div class="flex flex-col items-center justify-center gap-4 py-20 text-center">
 		{#if activeTab === 'mine'}
-			<p class="text-sm text-neutral-400">No has creado ninguna carta todavía</p>
+			{#if subTabActive === 'Vigentes'}
+				<p class="text-sm text-neutral-400">No has creado ninguna carta todavía</p>
 
-			<a href="/create" class="rounded-md bg-light px-6 py-3 font-semibold text-dark">
-				Crea tu primera carta
-			</a>
-		{:else}
-			<p class="text-sm text-neutral-400">No has recibido ninguna carta todavía</p>
-			<a href="/get" class="rounded-md bg-light px-6 py-3 font-semibold text-dark">
-				Recibe tu primera carta
-			</a>
+				<a href="/create" class="rounded-md bg-light px-6 py-3 font-semibold text-dark">
+					Crea tu primera carta
+				</a>
+			{:else if subTabActive === 'Finalizadas'}
+				<p class="text-sm text-neutral-400">No tienes cartas caducadas o canjeadas</p>
+			{/if}
+		{:else if activeTab === 'received'}
+			{#if subTabActive === 'Disponibles'}
+				<p class="text-sm text-neutral-400">No has recibido ninguna carta todavía</p>
+
+				<a href="/get" class="rounded-md bg-light px-6 py-3 font-semibold text-dark">
+					Recibe tu primera carta
+				</a>
+			{:else if subTabActive === 'Usadas'}
+				<p class="text-sm text-neutral-400">No has gastado ninguna carta todavía</p>
+			{/if}
 		{/if}
 	</div>
 {:else}

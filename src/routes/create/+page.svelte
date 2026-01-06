@@ -1,23 +1,40 @@
 <script lang="ts">
-	import type { Card } from '@/lib/db';
+	import { type IssuerMint, type Mint } from '@/lib/db';
 	import { goto } from '$app/navigation';
 	import { identity } from '@/lib/stores';
 	import { createAndMintCard } from '@/lib/crypto';
 	import Scene from '@/lib/components/3d/Scene.svelte';
+	import { EXPIRATION_PRESETS } from '@/lib/consts';
+	import CreateIcon from '@/lib/assets/CreateIcon.svelte';
 
 	// --- Estado ---
-	let step: 'editor' | 'preview' = $state('preview');
+	let step: 'editor' | 'preview' = $state('editor');
 
 	// Inputs del usuario
 	let title = $state('Ejemplo de valor de carta');
 	let description = $state('Ejemplo de anotaciones con un texto ligeramente largo.');
 	let color = $state('black');
 	let effect: 'plastic' | 'metalized' | 'holographic' | 'mirror' = $state('plastic');
+	let totalUnits = $state(1);
 
 	let isMinting = $state(false);
 
+	// Expiración
+	const formatDateForInput = (date: Date) => {
+		const pad = (n: number) => n.toString().padStart(2, '0');
+		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+	};
+
+	let expiryDate = $state(formatDateForInput(new Date(Date.now() + EXPIRATION_PRESETS['1W'])));
+	let minDate = $derived(formatDateForInput(new Date()));
+
+	function addTime(ms: number) {
+		const current = expiryDate ? new Date(expiryDate).getTime() : Date.now();
+		expiryDate = formatDateForInput(new Date(current + ms));
+	}
+
 	// Card Data para el 3D (Solo se actualiza al generar)
-	let previewCard: Card = $state({
+	let previewCard: IssuerMint = $state({
 		id: 'preview',
 		title: 'Título de Carta',
 		description: 'Descripción...',
@@ -25,12 +42,20 @@
 		issuerPublicKey: { kty: 'OKP', crv: 'Ed25519', x: '', y: '' } as JsonWebKey,
 		signature: '',
 		createdAt: Date.now(),
-		used: false
-	} as Card);
+		expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+		status: 'active',
+		totalUnits: 1,
+		usedUnits: 0
+	} as IssuerMint);
 
 	function handleGeneratePreview() {
 		if (!title) {
 			alert('¡Tu carta necesita un nombre!');
+			return;
+		}
+
+		if (totalUnits < 1) {
+			alert('Debes emitir al menos 1 unidad.');
 			return;
 		}
 		// Actualizamos el objeto que usa Card3D SOLO AHORA
@@ -41,8 +66,11 @@
 			visualConfig: {
 				effect,
 				color
-			}
-		} as Card;
+			},
+			expiresAt: new Date(expiryDate).getTime(),
+			totalUnits,
+			usedUnits: 0
+		} as IssuerMint;
 
 		step = 'preview';
 	}
@@ -53,12 +81,20 @@
 
 	async function handleMint() {
 		if (!$identity) return;
+
+		if (totalUnits < 1) {
+			alert('Debes emitir al menos 1 unidad.');
+			return;
+		}
+
 		isMinting = true;
 		try {
 			const card = await createAndMintCard($identity, {
 				title,
 				description,
-				visualConfig: { effect, color }
+				visualConfig: { effect, color },
+				expiresAt: new Date(expiryDate).getTime(),
+				totalUnits
 			});
 			console.log('✅ Carta creada:', card);
 			goto('/');
@@ -116,6 +152,28 @@
 					class="w-full resize-none rounded-lg border border-light/10 bg-light/5 p-3 font-medium placeholder-neutral-600 transition-colors focus:border-light/70 focus:outline-none"
 					maxlength="140"
 				></textarea>
+			</label>
+
+			<label class="flex flex-col gap-2">
+				<p class="text-xs font-semibold text-neutral-400">Unidades a emitir</p>
+				<input
+					type="number"
+					bind:value={totalUnits}
+					min="1"
+					max="1000"
+					placeholder="1"
+					class="w-full rounded-lg border border-light/10 bg-light/5 p-3 font-medium transition-colors focus:border-light/70 focus:outline-none"
+					class:border-red-500={totalUnits < 1}
+				/>
+				<div class="flex flex-col gap-1">
+					{#if totalUnits < 1}
+						<p class="text-[10px] font-bold text-red-500">Mínimo 1 unidad requerida</p>
+					{:else}
+						<p class="text-[10px] text-neutral-500">
+							Define cuántas unidades de esta carta podrán ser canjeadas.
+						</p>
+					{/if}
+				</div>
 			</label>
 
 			<div class="flex flex-col gap-4">
@@ -201,9 +259,55 @@
 				</div>
 			</div>
 
+			<div class="flex flex-col gap-4">
+				<div class="flex items-end justify-between">
+					<p class="text-xs font-semibold text-neutral-400">Fecha de Caducidad</p>
+					{#if !expiryDate || new Date(expiryDate).getTime() <= Date.now()}
+						<p class="text-[10px] font-bold text-red-500 uppercase">Fecha inválida</p>
+					{/if}
+				</div>
+
+				<div class="flex flex-col gap-3">
+					<input
+						type="datetime-local"
+						bind:value={expiryDate}
+						min={minDate}
+						class="w-full rounded-lg border border-light/10 bg-light/5 p-3 font-medium transition-colors focus:border-light/70 focus:outline-none"
+					/>
+
+					<div class="flex flex-wrap gap-2">
+						<button
+							onclick={() => addTime(EXPIRATION_PRESETS['24H'])}
+							class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
+						>
+							+24H
+						</button>
+						<button
+							onclick={() => addTime(EXPIRATION_PRESETS['1W'])}
+							class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
+						>
+							+1 SEMANA
+						</button>
+						<button
+							onclick={() => addTime(EXPIRATION_PRESETS['1M'])}
+							class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
+						>
+							+1 MES
+						</button>
+						<button
+							onclick={() => addTime(EXPIRATION_PRESETS['1Y'])}
+							class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
+						>
+							+1 AÑO
+						</button>
+					</div>
+				</div>
+			</div>
+
 			<button
 				onclick={handleGeneratePreview}
-				class="mb-20 rounded-lg bg-light py-4 font-semibold text-dark"
+				disabled={!expiryDate || new Date(expiryDate).getTime() <= Date.now() || totalUnits < 1}
+				class="mb-20 rounded-lg bg-light py-4 font-semibold text-dark disabled:opacity-50"
 			>
 				Ver carta
 			</button>
@@ -214,21 +318,17 @@
 		<div class="relative h-svh overflow-clip">
 			<Scene card={previewCard} />
 
-			<div
-				class="pointer-events-none absolute right-0 bottom-17 left-0 z-20 flex flex-col gap-20 p-6"
-			>
-				<p class="text-center text-xs text-gray-500">Toca 2 veces la carta para girarla.</p>
-
+			<div class="pointer-events-none absolute right-0 bottom-17 left-0 z-20 flex flex-col p-6">
 				<div class="pointer-events-auto flex gap-4">
 					<button
-						class="rounded-xl border border-light/10 bg-black/40 px-8 py-4 text-sm font-semibold"
+						class="rounded-full border border-light/10 bg-light/5 p-4 text-sm font-semibold"
 						onclick={handleEdit}
 					>
-						Editar
+						<CreateIcon class="size-5" />
 					</button>
 
 					<button
-						class="flex-1 rounded-xl bg-light px-8 py-4 text-sm font-semibold text-dark"
+						class="flex-1 rounded-full border border-light/10 bg-light/5 p-4 text-sm font-semibold"
 						onclick={handleMint}
 						disabled={isMinting}
 					>

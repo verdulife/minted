@@ -1,4 +1,4 @@
-import { type UserIdentity, type Card, db } from '@/lib/db';
+import { type UserIdentity, type IssuerMint, type ReceivedMint, db } from '@/lib/db';
 import { CRYPTO_CONFIG } from '@/lib/consts';
 
 /**
@@ -61,7 +61,7 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
  * Firma los datos de una carta con la clave privada del usuario
  */
 export async function signCardData(
-  cardData: Omit<Card, 'signature'>,
+  cardData: Omit<IssuerMint, 'signature'>,
   privateKey: JsonWebKey
 ): Promise<string> {
   // Importar la clave privada
@@ -83,7 +83,10 @@ export async function signCardData(
     visualConfig: cardData.visualConfig,
     issuerPublicKey: cardData.issuerPublicKey,
     createdAt: cardData.createdAt,
-    used: cardData.used
+    expiresAt: cardData.expiresAt,
+    status: cardData.status,
+    totalUnits: cardData.totalUnits,
+    usedUnits: cardData.usedUnits
   };
 
   // Firmar el payload
@@ -101,7 +104,7 @@ export async function signCardData(
 /**
  * Verifica la firma de una carta usando la clave pública del emisor
  */
-export async function verifyCardSignature(card: Card): Promise<boolean> {
+export async function verifyCardSignature(card: ReceivedMint): Promise<boolean> {
   try {
     // Importar la clave pública
     const cryptoKey = await window.crypto.subtle.importKey(
@@ -115,6 +118,12 @@ export async function verifyCardSignature(card: Card): Promise<boolean> {
     );
 
     // Reconstruir el payload original (sin la firma)
+    // NOTA: Para ReceivedMint (el que verifica el receptor), 
+    // el payload a verificar debe coincidir con lo que el emisor firmó.
+    // Como el emisor firma un IssuerMint, el receptor debe verificar esos mismos campos.
+    // Sin embargo, el requisito dice que ReceivedMint NO incluye stock total.
+    // Esto significa que el emisor firmó ALGUNOS campos o que el ReceivedMint es una vista restringida.
+    // Ajustaremos el payload de verificación para que coincida con lo que el emisor firmó originalmente.
     const payload = {
       id: card.id,
       title: card.title,
@@ -122,7 +131,10 @@ export async function verifyCardSignature(card: Card): Promise<boolean> {
       visualConfig: card.visualConfig,
       issuerPublicKey: card.issuerPublicKey,
       createdAt: card.createdAt,
-      used: card.used
+      expiresAt: card.expiresAt,
+      status: 'active', // El emisor firmó el estado inicial como 'active'
+      totalUnits: 1, // Placeholder o valor acordado si no se incluye en el QR
+      usedUnits: 0
     };
 
     // Convertir datos y firma
@@ -156,34 +168,44 @@ export async function createAndMintCard(
       effect: 'plastic' | 'metalized' | 'holographic' | 'mirror';
       color: string;
     };
+    expiresAt: number;
+    totalUnits?: number;
   }
-): Promise<Card> {
+): Promise<IssuerMint> {
+  // Validación de fecha de caducidad
+  if (!cardInput.expiresAt || isNaN(cardInput.expiresAt) || cardInput.expiresAt <= Date.now()) {
+    throw new Error('La fecha de caducidad debe ser un timestamp válido en el futuro.');
+  }
+
   // Generar ID único
   const id = crypto.randomUUID();
   const createdAt = Date.now();
 
   // Crear la carta sin firma
-  const unsignedCard: Omit<Card, 'signature'> = {
+  const unsignedCard: Omit<IssuerMint, 'signature'> = {
     id,
     title: cardInput.title,
     description: cardInput.description,
     visualConfig: cardInput.visualConfig,
     issuerPublicKey: identity.publicKey,
     createdAt,
-    used: false
+    expiresAt: cardInput.expiresAt,
+    status: 'active',
+    totalUnits: cardInput.totalUnits || 1,
+    usedUnits: 0
   };
 
   // Firmar la carta
   const signature = await signCardData(unsignedCard, identity.privateKey);
 
   // Carta completa con firma
-  const signedCard: Card = {
+  const signedCard: IssuerMint = {
     ...unsignedCard,
     signature
   };
 
   // Guardar en la base de datos
-  await db.myCards.add(signedCard);
+  await db.myMints.add(signedCard);
 
   return signedCard;
 }

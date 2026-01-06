@@ -60,11 +60,11 @@
 </script>
 
 <div
-	role="button"
 	tabindex="0"
+	role="button"
 	aria-label="Visualizador de tarjeta 3D"
-	class="touch-action-none relative h-full w-full cursor-grab select-none active:cursor-grabbing"
-	style="touch-action: none;"
+	style="touch-action: none"
+	class="relative h-full w-full cursor-grab select-none active:cursor-grabbing"
 	onpointerdown={handlePointerDown}
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
@@ -107,11 +107,4 @@
 
 		<CardModel {card} {targetX} {targetY} isInteracting={isPointerDown} />
 	</Canvas>
-
-	<div
-		class="pointer-events-none absolute right-6 bottom-6 flex items-center gap-2 text-[10px] tracking-widest text-white/10 uppercase"
-	>
-		<span class="inline-block h-px w-4 bg-white/10"></span>
-		Doble click para voltear
-	</div>
 </div>

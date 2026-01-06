@@ -1,32 +1,25 @@
 <script lang="ts">
-	import { db } from '$lib/db';
+	import { db, type Mint } from '$lib/db';
 	import { liveQuery } from 'dexie';
 	import CollectionGrid from '$lib/components/ui/CollectionGrid.svelte';
 	import Scene from '@/lib/components/3d/Scene.svelte';
-	import type { Card } from '$lib/db';
 
 	// Queries reactivas usando Dexie liveQuery
-	let myCards = liveQuery(() => db.table('myCards').toArray());
-	let receivedCards = liveQuery(() => db.table('receivedCards').toArray());
+	let myMints = liveQuery(() => db.table('myMints').toArray());
+	let collection = liveQuery(() => db.table('collection').toArray());
 
 	let activeTab = $state<'mine' | 'received'>('mine');
-	let selectedLevel = $state<'all' | 'common' | 'rare' | 'legendary'>('all');
+	let selectedMint = $state<Mint | null>(null);
 
-	let selectedCard = $state<Card | null>(null);
+	// Derivamos las cartas a mostrar según la pestaña
+	let currentMints = $derived(activeTab === 'mine' ? $myMints || [] : $collection || []);
 
-	// Derivamos las cartas a mostrar según la pestaña y el filtro
-	let currentCards = $derived(() => {
-		const source = activeTab === 'mine' ? $myCards || [] : $receivedCards || [];
-		if (selectedLevel === 'all') return source;
-		return source.filter((c) => c.visualConfig.rarity === selectedLevel);
-	});
-
-	function handleCardClick(card: Card) {
-		selectedCard = card;
+	function handleMintClick(mint: Mint) {
+		selectedMint = mint;
 	}
 
 	function closeDetail() {
-		selectedCard = null;
+		selectedMint = null;
 	}
 </script>
 
@@ -53,7 +46,7 @@
 				class:text-black={activeTab === 'mine'}
 				class:text-gray-400={activeTab !== 'mine'}
 			>
-				Mías ({($myCards || []).length})
+				Mías ({($myMints || []).length})
 			</button>
 			<button
 				onclick={() => (activeTab = 'received')}
@@ -62,33 +55,18 @@
 				class:text-black={activeTab === 'received'}
 				class:text-gray-400={activeTab !== 'received'}
 			>
-				Recibidas ({($receivedCards || []).length})
+				Recibidas ({($collection || []).length})
 			</button>
 		</div>
 	</header>
 
 	<main class="mx-auto max-w-6xl pb-24">
-		<!-- FILTROS RÁPIDOS (Opcional) -->
-		<div class="scrollbar-hide flex gap-2 overflow-x-auto p-4">
-			{#each ['all', 'common', 'rare', 'legendary'] as level}
-				<button
-					onclick={() => (selectedLevel = level as any)}
-					class="rounded-full border border-white/10 px-4 py-1.5 text-xs font-bold whitespace-nowrap uppercase transition-all"
-					class:bg-white={selectedLevel === level}
-					class:text-black={selectedLevel === level}
-					class:text-gray-500={selectedLevel !== level}
-				>
-					{level}
-				</button>
-			{/each}
-		</div>
-
 		<!-- GRID -->
-		<CollectionGrid cards={currentCards()} onCardClick={handleCardClick} />
+		<CollectionGrid cards={currentMints} {activeTab} onCardClick={handleMintClick} />
 	</main>
 
 	<!-- DETAIL MODAL (MODO 3D) -->
-	{#if selectedCard}
+	{#if selectedMint}
 		<div
 			class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl"
 		>
@@ -100,19 +78,19 @@
 					>✕</button
 				>
 				<h2 class="text-lg font-bold tracking-widest text-white/50 uppercase">
-					{selectedCard.title}
+					{selectedMint.title}
 				</h2>
 				<div class="w-10"></div>
 			</div>
 
 			<!-- 3D Scene -->
 			<div class="h-[60dvh] w-full">
-				<Scene card={selectedCard} />
+				<Scene card={selectedMint} />
 			</div>
 
 			<!-- Meta & Actions -->
 			<div class="w-full max-w-md space-y-4 p-8 text-center">
-				<p class="text-sm text-gray-400 italic">"{selectedCard.description}"</p>
+				<p class="text-sm text-gray-400 italic">"{selectedMint.description}"</p>
 
 				<div class="flex gap-4 pt-4">
 					<button
@@ -130,13 +108,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	.scrollbar-hide::-webkit-scrollbar {
-		display: none;
-	}
-	.scrollbar-hide {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-</style>

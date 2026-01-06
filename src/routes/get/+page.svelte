@@ -1,111 +1,191 @@
 <script lang="ts">
-	import { type Card, AppDatabase } from '@/lib/db';
-	import { identity } from '@/lib/stores';
-
+	import { db, type Mint, type ReceivedMint, type IssuerMint } from '@/lib/db';
+	import { goto } from '$app/navigation';
 	import QRScanner from '@/lib/components/QRScanner.svelte';
-	import Scene from '@/lib/components/3d/Scene.svelte';
-	import Logo from '@/lib/assets/Logo.svelte';
+	import { decodeMint, isCompressedMint } from '@/lib/qrCodec';
+	import { processScannedCard } from '@/lib/qr';
+	import { isExpired } from '@/lib/logic';
+	import { fade, scale } from 'svelte/transition';
 
-	let showScanner = $state(false);
-	let scannedCard: Card | null = $state(null);
-	let scanError: string | null = $state(null);
+	// Estado
+	type ScanResult =
+		| { type: 'received'; mint: ReceivedMint }
+		| { type: 'validated'; mint: IssuerMint }
+		| { type: 'error'; message: string };
 
-	function openScanner() {
-		showScanner = true;
-		scannedCard = null;
-		scanError = null;
+	let result = $state<ScanResult | null>(null);
+	let isProcessing = $state(false);
+
+	async function handleScan(text: string) {
+		isProcessing = true;
+		try {
+			// 1. Decodificar datos
+			let decoded: Mint;
+			if (isCompressedMint(text)) {
+				decoded = decodeMint(text) as any;
+			} else {
+				decoded = JSON.parse(text);
+			}
+
+			// 2. ¿Soy el emisor?
+			const myMint = await db.myMints.get(decoded.id);
+
+			if (myMint) {
+				// FLUJO A: VALIDACIÓN (SOY EL EMISOR)
+				if (isExpired(myMint.expiresAt)) {
+					result = { type: 'error', message: 'Este Mint ha caducado.' };
+				} else if (myMint.usedUnits >= myMint.totalUnits) {
+					result = { type: 'error', message: 'Este Mint ya ha alcanzado su límite de usos.' };
+				} else {
+					// Actualizar unidades
+					const newUsed = myMint.usedUnits + 1;
+					const newStatus = newUsed >= myMint.totalUnits ? 'redeemed' : 'active';
+
+					await db.myMints.update(myMint.id, {
+						usedUnits: newUsed,
+						status: newStatus
+					});
+
+					result = {
+						type: 'validated',
+						mint: { ...myMint, usedUnits: newUsed, status: newStatus }
+					};
+				}
+			} else {
+				// FLUJO B: RECIBIR (SOY EL CLIENTE)
+				const processResult = await processScannedCard(text);
+
+				if (processResult.success && processResult.card) {
+					result = { type: 'received', mint: processResult.card };
+				} else {
+					result = { type: 'error', message: processResult.error || 'Error al procesar el Mint.' };
+				}
+			}
+		} catch (e) {
+			console.error('Scan error:', e);
+			result = { type: 'error', message: 'Código QR no reconocido o dañado.' };
+		} finally {
+			isProcessing = false;
+		}
 	}
 
-	function handleCardScanned(card: Card) {
-		scannedCard = card;
-		console.log('✅ Carta escaneada y guardada:', card);
-	}
-
-	function handleScanError(error: string) {
-		scanError = error;
-		console.error('❌ Error escaneando:', error);
-	}
-
-	function closeScanner() {
-		showScanner = false;
+	function closeResult() {
+		result = null;
 	}
 </script>
 
-<div class="min-hsv p-6">
-	<div class="mx-auto max-w-4xl space-y-6">
-		<header>
-			<Logo class="h-6" />
-		</header>
+<div class="h-svh w-full bg-black">
+	<!-- ESCÁNER SIEMPRE ACTIVO SI NO HAY RESULTADO -->
+	{#if !result}
+		<QRScanner
+			onScan={handleScan}
+			onClose={() => goto('/')}
+			onError={(err) => (result = { type: 'error', message: err })}
+		/>
+	{/if}
 
-		<!-- Panel de Identidad -->
-		{#if $identity}
-			<!-- Panel de Prueba de Criptografía -->
-			<div class="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-md">
-				<h2 class="mb-4 text-2xl font-semibold text-blue-400">Prueba de Firma Digital</h2>
-
-				<div class="flex flex-wrap gap-4">
-					<a
-						href="/create"
-						class="inline-block rounded-lg bg-linear-to-r from-purple-500 to-pink-500 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:from-purple-600 hover:to-pink-600 hover:shadow-purple-500/20"
+	<!-- MODALES DE RESULTADO -->
+	{#if result}
+		<div
+			transition:fade={{ duration: 200 }}
+			class="fixed inset-0 z-150 flex items-center justify-center bg-black/90 p-6 backdrop-blur-md"
+		>
+			<div
+				transition:scale={{ duration: 300, start: 0.9 }}
+				class="w-full max-w-sm rounded-3xl border border-light/10 bg-neutral-900 p-8 text-center shadow-2xl"
+			>
+				{#if result.type === 'validated'}
+					<!-- ICONO ÉXITO VALIDACIÓN -->
+					<div
+						class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-500/20 text-green-400"
 					>
-						Crear Nueva Carta
-					</a>
-
-					<a
-						href="/collection"
-						class="inline-block rounded-lg border border-white/20 bg-white/10 px-6 py-3 font-semibold text-white backdrop-blur-md transition-all hover:bg-white/20"
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="40"
+							height="40"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="3"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+					</div>
+					<h2 class="mb-2 text-2xl font-bold text-white">¡Canje Válido!</h2>
+					<p class="mb-6 text-sm text-neutral-400">
+						Has validado una unidad de <strong>{result.mint.title}</strong>.<br />
+						Usos: {result.mint.usedUnits} / {result.mint.totalUnits}
+					</p>
+				{:else if result.type === 'received'}
+					<!-- ICONO ÉXITO RECEPCIÓN -->
+					<div
+						class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-500/20 text-blue-400"
 					>
-						Ver Mi Colección
-					</a>
-				</div>
-			</div>
-
-			<!-- Panel de Escáner -->
-			<div class="rounded-lg border border-white/20 bg-white/10 p-6 backdrop-blur-md">
-				<h2 class="mb-4 text-2xl font-semibold text-cyan-400">Recibir Cartas</h2>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="40"
+							height="40"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+							<polyline points="7 10 12 15 17 10"></polyline>
+							<line x1="12" y1="15" x2="12" y2="3"></line>
+						</svg>
+					</div>
+					<h2 class="mb-2 text-2xl font-bold text-white">¡Nuevo Mint!</h2>
+					<p class="mb-6 text-sm text-neutral-400">
+						Se ha añadido <strong>{result.mint.title}</strong> a tu colección correctamente.
+					</p>
+					<button
+						onclick={() => goto('/')}
+						class="mb-3 w-full rounded-2xl bg-white py-4 text-sm font-bold text-black transition-all active:scale-95"
+					>
+						Ver mi colección
+					</button>
+				{:else}
+					<!-- ICONO ERROR -->
+					<div
+						class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/20 text-red-400"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="40"
+							height="40"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="3"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<line x1="18" y1="6" x2="6" y2="18"></line>
+							<line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</div>
+					<h2 class="mb-2 text-2xl font-bold text-white">Sin éxito</h2>
+					<p class="mb-8 text-sm text-neutral-400">{result.message}</p>
+				{/if}
 
 				<button
-					onclick={openScanner}
-					class="rounded-lg bg-linear-to-r from-cyan-500 to-blue-500 px-6 py-3 font-semibold transition-all hover:from-cyan-600 hover:to-blue-600"
+					onclick={closeResult}
+					class="w-full rounded-2xl bg-white/5 py-4 text-sm font-bold text-white transition-all hover:bg-white/10 active:scale-95"
 				>
-					Escanear Código QR
+					Cerrar
 				</button>
-
-				{#if scannedCard}
-					<div class="mt-4 h-100 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-						<Scene card={scannedCard} />
-					</div>
-
-					<div class="mt-4 rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-						<h3 class="mb-2 text-lg font-semibold text-green-400">Carta Recibida</h3>
-						<div class="space-y-1 text-sm text-gray-300">
-							<p><span class="text-gray-400">Título:</span> {scannedCard.title}</p>
-							<p><span class="text-gray-400">Descripción:</span> {scannedCard.description}</p>
-							<p><span class="text-gray-400">Rareza:</span> {scannedCard.visualConfig.rarity}</p>
-							<p><span class="text-gray-400">Efecto:</span> {scannedCard.visualConfig.effect}</p>
-						</div>
-						<p class="mt-2 text-xs text-gray-400">
-							Verifica en IndexedDB → MintedDB → receivedCards
-						</p>
-					</div>
-				{/if}
-
-				{#if scanError}
-					<div class="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
-						<h3 class="mb-2 text-lg font-semibold text-red-400">Error</h3>
-						<p class="text-sm text-gray-300">{scanError}</p>
-					</div>
-				{/if}
 			</div>
-		{:else}
-			<div class="rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-6 backdrop-blur-md">
-				<p class="text-yellow-400">Generando identidad...</p>
-			</div>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
-<!-- Modal de Escáner -->
-{#if showScanner}
-	<QRScanner onCardScanned={handleCardScanned} onError={handleScanError} onClose={closeScanner} />
-{/if}
+<style>
+	:global(body) {
+		overflow: hidden;
+	}
+</style>

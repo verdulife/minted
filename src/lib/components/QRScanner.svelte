@@ -1,36 +1,39 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Html5Qrcode } from 'html5-qrcode';
-	import { processScannedCard } from '@/lib/qr';
-	import type { Card } from '@/lib/db';
+	import { fade } from 'svelte/transition';
 
 	interface Props {
-		onCardScanned?: (card: Card) => void;
+		onScan: (text: string) => void;
 		onError?: (error: string) => void;
-		onClose?: () => void;
+		onClose: () => void;
 	}
 
-	let { onCardScanned, onError, onClose }: Props = $props();
+	let { onScan, onError, onClose }: Props = $props();
 
 	let scanner: Html5Qrcode | null = $state(null);
 	let isScanning = $state(false);
-	let scanResult = $state<{ success: boolean; card?: Card; error?: string } | null>(null);
 
 	onMount(async () => {
 		try {
-			scanner = new Html5Qrcode('qr-reader');
-			await startScanning();
+			// Pequeño delay para asegurar que el DOM esté listo y las transiciones no interfieran
+			setTimeout(async () => {
+				scanner = new Html5Qrcode('qr-reader');
+				await startScanning();
+			}, 300);
 		} catch (error) {
 			console.error('Error inicializando escáner:', error);
-			if (onError) {
-				onError('No se pudo acceder a la cámara');
-			}
+			if (onError) onError('No se pudo acceder a la cámara');
 		}
 	});
 
 	onDestroy(async () => {
 		if (scanner && isScanning) {
-			await scanner.stop();
+			try {
+				await scanner.stop();
+			} catch (e) {
+				// Ignorar errores al cerrar
+			}
 		}
 	});
 
@@ -39,123 +42,117 @@
 
 		try {
 			await scanner.start(
-				{ facingMode: 'environment' }, // Cámara trasera en móviles
+				{ facingMode: 'environment' },
 				{
-					fps: 10,
-					qrbox: { width: 250, height: 250 }
+					fps: 15,
+					qrbox: (viewWidth, viewHeight) => {
+						const size = Math.min(viewWidth, viewHeight) * 0.7;
+						return { width: size, height: size };
+					}
 				},
 				async (decodedText) => {
-					// QR escaneado exitosamente
-					console.log('QR escaneado:', decodedText);
-
-					// Detener el escáner
-					if (scanner) {
+					if (scanner && isScanning) {
 						await scanner.stop();
 						isScanning = false;
 					}
-
-					// Procesar la carta
-					const result = await processScannedCard(decodedText);
-					scanResult = result;
-
-					if (result.success && result.card) {
-						if (onCardScanned) {
-							onCardScanned(result.card);
-						}
-					} else if (result.error) {
-						if (onError) {
-							onError(result.error);
-						}
-					}
+					onScan(decodedText);
 				},
-				(errorMessage) => {
-					// Error de escaneo (normal cuando no hay QR en vista)
-					// No logueamos esto para evitar spam en consola
-				}
+				() => {} // Ignorar errores de lectura continua
 			);
 			isScanning = true;
 		} catch (error) {
 			console.error('Error iniciando escáner:', error);
-			if (onError) {
-				onError('Error al iniciar la cámara');
+			if (error instanceof Error && error.message.includes('camera')) {
+				if (onError) onError('Permiso de cámara denegado');
 			}
-		}
-	}
-
-	async function handleClose() {
-		if (scanner && isScanning) {
-			await scanner.stop();
-		}
-		if (onClose) {
-			onClose();
 		}
 	}
 </script>
 
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-	<div class="w-full max-w-lg rounded-lg border border-white/20 bg-gray-900 p-6">
-		<div class="mb-4 flex items-center justify-between">
-			<h2 class="text-2xl font-bold text-white">📷 Escanear Carta</h2>
-			<button onclick={handleClose} class="text-gray-400 transition-colors hover:text-white">
-				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M6 18L18 6M6 6l12 12"
-					/>
-				</svg>
+<div
+	transition:fade={{ duration: 300 }}
+	class="bg-opacity-95 fixed inset-0 z-100 flex flex-col bg-black"
+>
+	<!-- SCANNER CONTAINER (FULLSCREEN) -->
+	<div id="qr-reader" class="h-svh w-full overflow-hidden"></div>
+
+	<!-- OVERLAY UI -->
+	<div class="pointer-events-none absolute inset-0 z-10 flex flex-col">
+		<!-- HEADER -->
+		<div
+			class="pointer-events-auto flex items-center justify-between bg-linear-to-b from-black/80 to-transparent p-6 pt-12"
+		>
+			<div class="flex flex-col">
+				<h2 class="text-xl font-bold text-white">Escaneando...</h2>
+				<p class="text-xs text-neutral-400">Centra el código QR en el cuadro</p>
+			</div>
+
+			<button
+				onclick={onClose}
+				class="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-90"
+			>
+				<span class="text-2xl">✕</span>
 			</button>
 		</div>
 
-		{#if !scanResult}
-			<div class="space-y-4">
-				<p class="text-sm text-gray-300">
-					Apunta la cámara al código QR de la carta para escanearla
-				</p>
+		<!-- CENTER MASK (Visual decoration) -->
+		<div class="relative flex flex-1 items-center justify-center">
+			<div
+				class="relative h-64 w-64 rounded-3xl border-2 border-white/20 shadow-[0_0_0_100vmax_rgba(0,0,0,0.5)]"
+			>
+				<!-- CORNERS -->
+				<div
+					class="absolute -top-1 -left-1 h-8 w-8 rounded-tl-2xl border-t-4 border-l-4 border-white"
+				></div>
+				<div
+					class="absolute -top-1 -right-1 h-8 w-8 rounded-tr-2xl border-t-4 border-r-4 border-white"
+				></div>
+				<div
+					class="absolute -bottom-1 -left-1 h-8 w-8 rounded-bl-2xl border-b-4 border-l-4 border-white"
+				></div>
+				<div
+					class="absolute -right-1 -bottom-1 h-8 w-8 rounded-br-2xl border-r-4 border-b-4 border-white"
+				></div>
 
-				<!-- Contenedor del escáner -->
-				<div id="qr-reader" class="overflow-hidden rounded-lg border-2 border-purple-500/50"></div>
-
+				<!-- SCANNING LINE ANIMATION -->
 				{#if isScanning}
-					<div class="text-center">
-						<p class="animate-pulse text-sm text-green-400">🔍 Buscando código QR...</p>
-					</div>
+					<div
+						class="absolute inset-x-4 top-0 h-1 animate-[scan_2s_infinite] bg-linear-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+					></div>
 				{/if}
 			</div>
-		{:else if scanResult.success && scanResult.card}
-			<div class="space-y-4">
-				<div class="rounded-lg border border-green-500/30 bg-green-500/10 p-4">
-					<h3 class="mb-2 text-lg font-semibold text-green-400">✅ Carta Recibida</h3>
-					<div class="space-y-1 text-sm text-gray-300">
-						<p><span class="text-gray-400">Título:</span> {scanResult.card.title}</p>
-						<p><span class="text-gray-400">Descripción:</span> {scanResult.card.description}</p>
-						<p><span class="text-gray-400">Rareza:</span> {scanResult.card.visualConfig.rarity}</p>
-						<p><span class="text-gray-400">Efecto:</span> {scanResult.card.visualConfig.effect}</p>
-					</div>
-				</div>
+		</div>
 
-				<button
-					onclick={handleClose}
-					class="w-full rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-2 font-semibold transition-all hover:from-purple-600 hover:to-blue-600"
-				>
-					Cerrar
-				</button>
-			</div>
-		{:else if scanResult.error}
-			<div class="space-y-4">
-				<div class="rounded-lg border border-red-500/30 bg-red-500/10 p-4">
-					<h3 class="mb-2 text-lg font-semibold text-red-400">❌ Error</h3>
-					<p class="text-sm text-gray-300">{scanResult.error}</p>
-				</div>
-
-				<button
-					onclick={handleClose}
-					class="w-full rounded-lg bg-gray-700 px-4 py-2 font-semibold transition-all hover:bg-gray-600"
-				>
-					Cerrar
-				</button>
-			</div>
-		{/if}
+		<!-- FOOTER -->
+		<div class="bg-linear-to-t from-black/80 to-transparent p-12 text-center">
+			<p class="text-xs text-neutral-400">Compatible con tarjetas físicas y digitales</p>
+		</div>
 	</div>
 </div>
+
+<style>
+	@keyframes scan {
+		0%,
+		100% {
+			top: 10%;
+			opacity: 0;
+		}
+		20% {
+			opacity: 1;
+		}
+		80% {
+			opacity: 1;
+		}
+		100% {
+			top: 90%;
+			opacity: 0;
+		}
+	}
+
+	/* Estilos para el video que genera html5-qrcode */
+	:global(#qr-reader video) {
+		object-fit: cover !important;
+		height: 100% !important;
+		width: 100% !important;
+	}
+</style>

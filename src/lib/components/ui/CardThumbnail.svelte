@@ -1,24 +1,41 @@
 <script lang="ts">
-	import type { Card } from '@/lib/db';
+	import { type Mint, type IssuerMint } from '@/lib/db';
+	import Logo from '@/lib/assets/Logo.svelte';
 
 	interface Props {
-		card: Card;
-		activeTab: 'mine' | 'received';
-		onClick?: (card: Card) => void;
+		card: Mint;
+		onClick?: (card: Mint) => void;
 	}
 
 	let { card, onClick }: Props = $props();
+
+	// Helper to check if it's an issuer mint
+	const issuerMint = $derived('totalUnits' in card ? (card as IssuerMint) : null);
+
+	let bgColor = $derived(card.visualConfig.color);
+	let textColor = $derived(card.visualConfig.color === 'black' ? 'white' : 'black');
 </script>
 
 <button
+	style="--bg-color: {bgColor}"
+	class="aspect-63/88 overflow-hidden rounded-xl bg-light/40 shadow-lg"
 	onclick={() => onClick?.(card)}
-	class="group relative aspect-63/88 overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-lg transition-all hover:scale-105 hover:border-white/30 hover:shadow-white/5 active:scale-95"
 >
 	<div
-		class="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100"
+		style="--text-color: {textColor}"
+		class="flex h-full flex-col items-center justify-between border border-light/10 bg-linear-to-br from-(--bg-color)/40 to-(--bg-color)/80 p-5 py-6 text-(--text-color)"
 	>
-		<div class="absolute right-0 bottom-2 left-0 px-2 text-center">
-			<p class="truncate text-[10px] font-bold tracking-tight text-white uppercase">{card.title}</p>
+		<div class="w-full">
+			<p class="text-left text-lg leading-tight font-bold">
+				{card.title}
+			</p>
+			{#if issuerMint}
+				<p class="mt-1 text-left text-[10px] font-bold opacity-60">
+					{issuerMint.usedUnits}/{issuerMint.totalUnits} USADOS
+				</p>
+			{/if}
 		</div>
+
+		<Logo class="h-3 opacity-50" />
 	</div>
 </button>

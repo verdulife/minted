@@ -1,16 +1,17 @@
-import { type Card, db } from '@/lib/db';
+import { type Mint, type ReceivedMint, db } from '@/lib/db';
 import { verifyCardSignature } from '@/lib/crypto';
+import { decodeMint, isCompressedMint } from '@/lib/qrCodec';
 import QRCode from 'qrcode';
 
 /**
  * Genera un código QR en formato Data URL a partir de una carta firmada
  */
-export async function generateCardQR(card: Card): Promise<string> {
-  // Serializar la carta completa como JSON
-  const cardJSON = JSON.stringify(card);
+export async function generateCardQR(card: Mint, customData?: string): Promise<string> {
+  // Serializar la carta completa como JSON o usar data personalizada (comprimida)
+  const data = customData || JSON.stringify(card);
 
   // Generar QR como Data URL (imagen base64)
-  const qrDataURL = await QRCode.toDataURL(cardJSON, {
+  const qrDataURL = await QRCode.toDataURL(data, {
     errorCorrectionLevel: 'M',
     margin: 2,
     width: 512,
@@ -23,20 +24,22 @@ export async function generateCardQR(card: Card): Promise<string> {
   return qrDataURL;
 }
 
-/**
- * Procesa una carta escaneada desde un QR
- * Verifica la firma y la guarda en receivedCards si es válida
- */
-export async function processScannedCard(cardJSON: string): Promise<{
+export async function processScannedCard(rawJSON: string): Promise<{
   success: boolean;
-  card?: Card;
+  card?: ReceivedMint;
   error?: string;
 }> {
   try {
-    // Parsear el JSON
-    const card: Card = JSON.parse(cardJSON);
+    let card: ReceivedMint;
 
-    // Validar estructura básica
+    // Detectar si los datos están comprimidos y decodificar si es necesario
+    if (isCompressedMint(rawJSON)) {
+      card = decodeMint(rawJSON);
+    } else {
+      card = JSON.parse(rawJSON);
+    }
+
+    // Validar estructura básica (usando las claves largas ya decodificadas)
     if (!card.id || !card.signature || !card.issuerPublicKey) {
       return {
         success: false,
@@ -54,8 +57,8 @@ export async function processScannedCard(cardJSON: string): Promise<{
       };
     }
 
-    // Verificar si ya existe en receivedCards
-    const existing = await db.receivedCards.get(card.id);
+    // Verificar si ya existe en collection
+    const existing = await db.collection.get(card.id);
     if (existing) {
       return {
         success: false,
@@ -63,8 +66,8 @@ export async function processScannedCard(cardJSON: string): Promise<{
       };
     }
 
-    // Guardar en receivedCards
-    await db.receivedCards.add(card);
+    // Guardar en collection
+    await db.collection.add(card);
 
     return {
       success: true,
