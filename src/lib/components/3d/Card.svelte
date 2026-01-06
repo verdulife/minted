@@ -2,11 +2,11 @@
 	import type { Card } from '@/lib/db';
 	import { T, useTask } from '@threlte/core';
 	import { useTexture } from '@threlte/extras';
-	import * as THREE from 'three';
-	import CardFrame from './CardFrame.svelte';
-	import CardTitle from './CardTitle.svelte';
-	import CardDescription from './CardDescription.svelte';
-	import CardLogo from './CardLogo.svelte';
+	import { RepeatWrapping, Shape } from 'three';
+	import CardFrame from '@/lib/components/3d/CardFrame.svelte';
+	import CardTitle from '@/lib/components/3d/CardTitle.svelte';
+	import CardDescription from '@/lib/components/3d/CardDescription.svelte';
+	import CardLogo from '@/lib/components/3d/CardLogo.svelte';
 
 	interface Props {
 		card: Card;
@@ -19,7 +19,7 @@
 
 	const roughnessMap = useTexture('/textures/roughness.jpg', {
 		transform: (t) => {
-			t.wrapS = t.wrapT = THREE.RepeatWrapping;
+			t.wrapS = t.wrapT = RepeatWrapping;
 			t.repeat.set(1, 1.4);
 			return t;
 		}
@@ -30,11 +30,11 @@
 
 	// Definir la forma del naipe redondeado
 	const width = 2.5;
-	const height = width * 1.4;
+	const height = width * 1.5;
 	const radius = 0.1;
 	const depth = 0.025;
 
-	const shape = new THREE.Shape();
+	const shape = new Shape();
 	shape.moveTo(-width / 2 + radius, -height / 2);
 	shape.lineTo(width / 2 - radius, -height / 2);
 	shape.quadraticCurveTo(width / 2, -height / 2, width / 2, -height / 2 + radius);
@@ -45,7 +45,7 @@
 	shape.lineTo(-width / 2, -height / 2 + radius);
 	shape.quadraticCurveTo(-width / 2, -height / 2, -width / 2 + radius, -height / 2);
 
-	const extrudeSettings = { depth, bevelEnabled: false };
+	const extrudeSettings = { depth, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.01, bevelSegments: 4 };
 
 	// Lógica de suavizado (Lerp)
 	useTask(() => {
@@ -65,17 +65,10 @@
 	{#if card}
 		<T.Mesh>
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
-			<T.MeshPhysicalMaterial
-				color={card.visualConfig.color}
-				roughness={0.6}
-				metalness={0.8}
-				clearcoat={1}
-				clearcoatRoughness={0.05}
-				roughnessMap={$roughnessMap}
-			/>
+			<T.MeshPhysicalMaterial color={card.visualConfig.color} metalness={0} roughness={0} />
 		</T.Mesh>
 
-		<CardFrame
+		<!-- <CardFrame
 			{width}
 			{height}
 			{radius}
@@ -83,7 +76,7 @@
 			color={card.visualConfig.color}
 			metalness={1}
 			roughness={0}
-		/>
+		/> -->
 
 		<CardTitle text={card.title} />
 

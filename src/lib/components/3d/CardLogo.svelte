@@ -9,7 +9,7 @@
 	let { color }: Props = $props();
 
 	const logoTexture = useTexture('/vertical-logotype.png');
-	const position = [0, 0, -0.001];
+	const position = [0, 0, -0.002];
 	const width = 1;
 
 	// Calculamos el ratio de aspecto automáticamente para evitar deformaciones
