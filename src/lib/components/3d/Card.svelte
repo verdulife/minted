@@ -1,9 +1,9 @@
 <script lang="ts">
 	import type { Card } from '@/lib/db';
 	import { T, useTask } from '@threlte/core';
-	import { useTexture } from '@threlte/extras';
 	import { RepeatWrapping, Shape } from 'three';
-	import CardFrame from '@/lib/components/3d/CardFrame.svelte';
+	/* import { useTexture } from '@threlte/extras'; */
+	/* import CardFrame from '@/lib/components/3d/CardFrame.svelte'; */
 	import CardTitle from '@/lib/components/3d/CardTitle.svelte';
 	import CardDescription from '@/lib/components/3d/CardDescription.svelte';
 	import CardLogo from '@/lib/components/3d/CardLogo.svelte';
@@ -16,14 +16,15 @@
 	}
 
 	let { card, targetX = 0, targetY = 0, isInteracting = false }: Props = $props();
+	let textColor = $derived(card.visualConfig.color === 'black' ? 'white' : 'black');
 
-	const roughnessMap = useTexture('/textures/roughness.jpg', {
+	/* const roughnessMap = useTexture('/textures/roughness.jpg', {
 		transform: (t) => {
 			t.wrapS = t.wrapT = RepeatWrapping;
 			t.repeat.set(1, 1.4);
 			return t;
 		}
-	});
+	}); */
 
 	let rotationX = $state(0);
 	let rotationY = $state(0);
@@ -45,7 +46,13 @@
 	shape.lineTo(-width / 2, -height / 2 + radius);
 	shape.quadraticCurveTo(-width / 2, -height / 2, -width / 2 + radius, -height / 2);
 
-	const extrudeSettings = { depth, bevelEnabled: true, bevelThickness: 0.001, bevelSize: 0.01, bevelSegments: 4 };
+	const extrudeSettings = {
+		depth,
+		bevelEnabled: true,
+		bevelThickness: 0.004,
+		bevelSize: 0.01,
+		bevelSegments: 10
+	};
 
 	// Lógica de suavizado (Lerp)
 	useTask(() => {
@@ -65,7 +72,19 @@
 	{#if card}
 		<T.Mesh>
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
-			<T.MeshPhysicalMaterial color={card.visualConfig.color} metalness={0} roughness={0} />
+			<T.MeshPhysicalMaterial
+				color={card.visualConfig.color}
+				metalness={0.5}
+				roughness={0.3}
+				clearcoat={1}
+				clearcoatRoughness={0.15}
+				iridescence={1}
+				iridescenceIOR={1}
+				iridescenceThicknessRange={[0, 2400]}
+				transmission={0.5}
+				thickness={1}
+				attenuationDistance={0.5}
+			/>
 		</T.Mesh>
 
 		<!-- <CardFrame
@@ -78,10 +97,8 @@
 			roughness={0}
 		/> -->
 
-		<CardTitle text={card.title} />
-
-		<CardDescription text={card.description} />
-
-		<CardLogo color={card.visualConfig.color} />
+		<CardTitle text={card.title} color={textColor} />
+		<CardDescription text={card.description} color={textColor} />
+		<CardLogo color={textColor} />
 	{/if}
 </T.Group>

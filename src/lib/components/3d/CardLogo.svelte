@@ -9,7 +9,6 @@
 	let { color }: Props = $props();
 
 	const logoTexture = useTexture('/vertical-logotype.png');
-	const position = [0, 0, -0.002];
 	const width = 1;
 
 	// Calculamos el ratio de aspecto automáticamente para evitar deformaciones
@@ -19,17 +18,23 @@
 	let height = $derived(width / aspectRatio);
 </script>
 
-<T.Mesh {position} rotation={[0, Math.PI, 0]}>
+<T.Mesh position={[0, 0, -0.005]} rotation={[0, Math.PI, 0]}>
 	<T.PlaneGeometry args={[width, height]} />
 	{#if $logoTexture}
 		<T.MeshPhysicalMaterial
+			{color}
 			map={$logoTexture}
 			transparent={true}
-			alphaTest={0.05}
-			metalness={1}
-			roughness={0}
-			envMapIntensity={1}
-			{color}
+			metalness={0.5}
+			roughness={0.3}
+			clearcoat={1}
+			clearcoatRoughness={0.15}
+			iridescence={1}
+			iridescenceIOR={1}
+			iridescenceThicknessRange={[0, 2400]}
+			transmission={0.5}
+			thickness={1}
+			attenuationDistance={0.5}
 		/>
 	{/if}
 </T.Mesh>

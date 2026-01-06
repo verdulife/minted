@@ -153,10 +153,8 @@ export async function createAndMintCard(
     title: string;
     description: string;
     visualConfig: {
-      rarity: 'common' | 'rare' | 'legendary';
-      effect: 'standard' | 'holographic' | 'gold';
+      effect: 'plastic' | 'metalized' | 'holographic' | 'mirror';
       color: string;
-      image?: string;
     };
   }
 ): Promise<Card> {

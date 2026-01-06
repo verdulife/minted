@@ -6,12 +6,12 @@
 	import Scene from '@/lib/components/3d/Scene.svelte';
 
 	// --- Estado ---
-	let step: 'editor' | 'preview' = $state('editor');
+	let step: 'editor' | 'preview' = $state('preview');
 
 	// Inputs del usuario
 	let title = $state('Ejemplo de valor de carta');
 	let description = $state('Ejemplo de anotaciones con un texto ligeramente largo.');
-	let color = $state('tomato');
+	let color = $state('black');
 	let effect: 'plastic' | 'metalized' | 'holographic' | 'mirror' = $state('plastic');
 
 	let isMinting = $state(false);
@@ -21,7 +21,7 @@
 		id: 'preview',
 		title: 'Título de Carta',
 		description: 'Descripción...',
-		visualConfig: { effect: 'plastic', color: 'tomato' },
+		visualConfig: { effect: 'plastic', color: 'black' },
 		issuerPublicKey: { kty: 'OKP', crv: 'Ed25519', x: '', y: '' } as JsonWebKey,
 		signature: '',
 		createdAt: Date.now(),
@@ -58,7 +58,7 @@
 			const card = await createAndMintCard($identity, {
 				title,
 				description,
-				visualConfig: { rarity, effect: 'standard', color }
+				visualConfig: { effect, color }
 			});
 			console.log('✅ Carta creada:', card);
 			goto('/');
@@ -210,38 +210,35 @@
 		</main>
 	{/if}
 
-	<!-- MODO PREVIEW: Botones de Acción -->
 	{#if step === 'preview'}
 		<div class="relative h-svh overflow-clip">
 			<Scene card={previewCard} />
 
 			<div
-				class="pointer-events-none absolute right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-end gap-4 bg-linear-to-t from-black via-black/80 to-transparent p-6 pt-24 pb-12"
+				class="pointer-events-none absolute right-0 bottom-17 left-0 z-20 flex flex-col gap-20 p-6"
 			>
-				<div class="pointer-events-auto flex w-full max-w-md gap-4">
+				<p class="text-center text-xs text-gray-500">Toca 2 veces la carta para girarla.</p>
+
+				<div class="pointer-events-auto flex gap-4">
 					<button
+						class="rounded-xl border border-light/10 bg-black/40 px-8 py-4 text-sm font-semibold"
 						onclick={handleEdit}
-						class="flex-1 rounded-xl border border-white/20 bg-black/40 py-4 font-bold text-white backdrop-blur-md transition-all hover:bg-white/10"
 					>
-						← Editar
+						Editar
 					</button>
 
 					<button
+						class="flex-1 rounded-xl bg-light px-8 py-4 text-sm font-semibold text-dark"
 						onclick={handleMint}
 						disabled={isMinting}
-						class="flex-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 py-4 font-bold text-white shadow-xl shadow-purple-900/40 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:grayscale"
 					>
 						{#if isMinting}
-							⏳ Forjando...
+							Forjando...
 						{:else}
-							✨ FORJAR CARTA FINAL
+							Forjar carta
 						{/if}
 					</button>
 				</div>
-
-				<p class="text-center text-xs text-gray-500">
-					Al forjar, se guardará en tu colección permanentemente.
-				</p>
 			</div>
 		</div>
 	{/if}

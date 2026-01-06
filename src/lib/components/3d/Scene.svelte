@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Card } from '@/lib/db';
 	import { Canvas, T } from '@threlte/core';
-	import { Environment, CubeEnvironment } from '@threlte/extras';
+	import { Environment } from '@threlte/extras';
 	import CardModel from '@/lib/components/3d/Card.svelte';
 
 	interface Props {
@@ -72,7 +72,39 @@
 >
 	<Canvas>
 		<T.PerspectiveCamera makeDefault position={[0, 0, 7]} fov={49} />
-		<Environment url="/textures/white.jpg" isBackground={false} />
+
+		<T.AmbientLight intensity={Math.PI} />
+
+		<Environment url="/textures/studio_small_08.hdr" isBackground={false} />
+		<T.Light
+			intensity={2}
+			color="white"
+			position={[0, -1, 5]}
+			rotation={[0, 0, Math.PI / 3]}
+			scale={[100, 0.1, 1]}
+		/>
+		<T.Light
+			intensity={3}
+			color="white"
+			position={[-1, -1, 1]}
+			rotation={[0, 0, Math.PI / 3]}
+			scale={[100, 0.1, 1]}
+		/>
+		<T.Light
+			intensity={3}
+			color="white"
+			position={[1, 1, 1]}
+			rotation={[0, 0, Math.PI / 3]}
+			scale={[100, 0.1, 1]}
+		/>
+		<T.Light
+			intensity={10}
+			color="white"
+			position={[-10, 0, 14]}
+			rotation={[0, Math.PI / 2, Math.PI / 3]}
+			scale={[100, 10, 1]}
+		/>
+
 		<CardModel {card} {targetX} {targetY} isInteracting={isPointerDown} />
 	</Canvas>
 
