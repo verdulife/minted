@@ -1,5 +1,4 @@
 <script>
-	import HomeIcon from '@/lib/assets/HomeIcon.svelte';
 	import CreateIcon from '@/lib/assets/CreateIcon.svelte';
 	import CollectionIcon from '@/lib/assets/CollectionIcon.svelte';
 	import UserIcon from '@/lib/assets/UserIcon.svelte';
@@ -8,21 +7,11 @@
 	$: activeRoute = $page.url.pathname;
 </script>
 
-<footer class="fixed right-0 bottom-0 left-0 z-50 w-full border-t border-light/10 bg-dark">
-	<nav>
-		<ul class="flex justify-center gap-3">
-			<li>
-				<a
-					href="/"
-					class="flex flex-col items-center justify-end gap-2 px-5 py-3 opacity-50"
-					class:opacity-100={activeRoute === '/'}
-					title="Inicio"
-				>
-					<HomeIcon class="size-5" />
-					<p class="text-xs">Inicio</p>
-				</a>
-			</li>
-
+<footer class="fixed right-0 bottom-6 left-0 z-20 w-full">
+	<nav class="flex items-center justify-center">
+		<ul
+			class="flex justify-center gap-3 rounded-full border border-light/10 bg-dark/70 px-6 backdrop-blur"
+		>
 			<li>
 				<a
 					href="/create"
@@ -43,7 +32,7 @@
 					title="Colección"
 				>
 					<CollectionIcon class="size-5" />
-					<p class="text-xs">Obtener</p>
+					<p class="text-xs">Escaner</p>
 				</a>
 			</li>
 

@@ -4,7 +4,8 @@
 	import { initAuth } from '@/lib/auth';
 	import { isInitialized } from '@/lib/stores';
 	import { onMount } from 'svelte';
-	import Nav from '@/lib/components/Nav.svelte';
+	import Logo from '@/lib/assets/Logo.svelte';
+	import Background from '@/lib/components/Background.svelte';
 
 	let { children } = $props();
 
@@ -15,9 +16,10 @@
 
 {#if $isInitialized}
 	{@render children()}
-	<Nav />
 {:else}
 	<div class="flex h-screen items-center justify-center bg-black text-white">
-		<p class="animate-pulse">Despertando tu mazo...</p>
+		<Logo class="w-24 animate-pulse" />
 	</div>
 {/if}
+
+<Background />

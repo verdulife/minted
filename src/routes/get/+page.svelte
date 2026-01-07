@@ -77,11 +77,7 @@
 <div class="h-svh w-full bg-black">
 	<!-- ESCÁNER SIEMPRE ACTIVO SI NO HAY RESULTADO -->
 	{#if !result}
-		<QRScanner
-			onScan={handleScan}
-			onClose={() => goto('/')}
-			onError={(err) => (result = { type: 'error', message: err })}
-		/>
+		<QRScanner onScan={handleScan} onError={(err) => (result = { type: 'error', message: err })} />
 	{/if}
 
 	<!-- MODALES DE RESULTADO -->

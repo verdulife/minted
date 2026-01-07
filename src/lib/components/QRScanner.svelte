@@ -2,14 +2,14 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { Html5Qrcode } from 'html5-qrcode';
 	import { fade } from 'svelte/transition';
+	import Back from './Back.svelte';
 
 	interface Props {
 		onScan: (text: string) => void;
 		onError?: (error: string) => void;
-		onClose: () => void;
 	}
 
-	let { onScan, onError, onClose }: Props = $props();
+	let { onScan, onError }: Props = $props();
 
 	let scanner: Html5Qrcode | null = $state(null);
 	let isScanning = $state(false);
@@ -87,12 +87,7 @@
 				<p class="text-xs text-neutral-400">Centra el código QR en el cuadro</p>
 			</div>
 
-			<button
-				onclick={onClose}
-				class="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-90"
-			>
-				<span class="text-2xl">✕</span>
-			</button>
+			<Back />
 		</div>
 
 		<!-- CENTER MASK (Visual decoration) -->

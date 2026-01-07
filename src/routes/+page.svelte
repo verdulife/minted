@@ -7,14 +7,35 @@
 	import ShareQRModal from '@/lib/components/ui/ShareQRModal.svelte';
 	import { isExpired, canDelete } from '$lib/logic';
 	import TrashIcon from '@/lib/assets/TrashIcon.svelte';
+	import Nav from '@/lib/components/Nav.svelte';
+	import Back from '@/lib/components/Back.svelte';
+	import { page } from '$app/stores';
 
 	// Queries reactivas usando Dexie liveQuery
 	let myMints = liveQuery(() => db.table('myMints').toArray());
 	let collection = liveQuery(() => db.table('collection').toArray());
 
+	let searchParams = $page.url.searchParams;
+	let mintParam = searchParams.get('m');
+	let mintCollection = $derived(() => {
+		if (mintParam) {
+			const source = $myMints || [];
+			const mint = source.find((m) => m.id === mintParam);
+
+			console.log(mint);
+			return mint;
+		}
+
+		return null;
+	});
+
+	(function () {
+		mintCollection();
+	})();
+
 	let activeTab = $state<'mine' | 'received'>('mine');
 	let subTab = $state<'active' | 'inactive'>('active');
-	let selectedMint = $state<Mint | null>(null);
+	let selectedMint = $state<Mint | null>(mintCollection());
 	let showShareModal = $state(false);
 
 	// Estado para mantener los filtros de caducidad actualizados
@@ -22,7 +43,7 @@
 	let timer: ReturnType<typeof setInterval>;
 
 	onMount(() => {
-		timer = setInterval(() => (now = Date.now()), 30000); // Actualizar cada 30s
+		timer = setInterval(() => (now = Date.now()), 30 * 1000); // Actualizar cada 30s
 	});
 
 	onDestroy(() => {
@@ -61,8 +82,6 @@
 		return { active: 'Disponibles', inactive: 'Usadas' };
 	});
 
-	let subTabActive = $derived(subTabLabels().active);
-
 	function handleMintClick(mint: Mint) {
 		selectedMint = mint;
 	}
@@ -96,9 +115,9 @@
 	}
 </script>
 
-<div class="min-h-dvh">
+<div>
 	<!-- HEADER -->
-	<header class="sticky top-0 z-30 border-b border-light/10 bg-dark p-6">
+	<header class="sticky top-0 z-30 border-b border-light/10 bg-dark/70 p-6 backdrop-blur">
 		<!-- TABS -->
 		<div class="flex rounded-full bg-light/5 p-1 ring-1 ring-light/10">
 			<button
@@ -145,30 +164,19 @@
 		</div>
 	</header>
 
-	<main class="mx-auto max-w-6xl pb-24">
-		<!-- GRID -->
-		<CollectionGrid
-			cards={filteredMints()}
-			{activeTab}
-			{subTabActive}
-			onCardClick={handleMintClick}
-		/>
+	<main>
+		<CollectionGrid cards={filteredMints()} {activeTab} onCardClick={handleMintClick} />
 	</main>
 
 	<!-- DETAIL MODAL (MODO 3D) -->
 	{#if selectedMint}
 		<div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-dark">
-			<button
-				onclick={closeDetail}
-				class="absolute top-6 left-6 z-10 h-10 w-10 rounded-full bg-white/10 transition-all hover:bg-white/20"
-			>
-				✕
-			</button>
+			<Back onClick={closeDetail} />
 
 			<div class="relative h-svh overflow-clip">
 				<Scene card={selectedMint} />
 
-				<div class="pointer-events-none absolute right-0 bottom-17 left-0 z-20 flex flex-col p-6">
+				<div class="pointer-events-none absolute right-0 bottom-0 left-0 z-20 flex flex-col p-6">
 					<div class="pointer-events-auto flex gap-4">
 						<button
 							onclick={() => (showShareModal = true)}
@@ -194,3 +202,5 @@
 		<ShareQRModal mint={selectedMint} onClose={() => (showShareModal = false)} />
 	{/if}
 </div>
+
+<Nav />

@@ -18,18 +18,18 @@
 
 <button
 	style="--bg-color: {bgColor}"
-	class="aspect-63/88 overflow-hidden rounded-xl bg-light/40 shadow-lg"
+	class="aspect-63/88 overflow-hidden rounded-xl bg-light shadow-lg"
 	onclick={() => onClick?.(card)}
 >
 	<div
 		style="--text-color: {textColor}"
-		class="flex h-full flex-col items-center justify-between border border-light/10 bg-linear-to-br from-(--bg-color)/40 to-(--bg-color)/80 p-5 py-6 text-(--text-color)"
+		class="flex h-full flex-col items-center justify-between border border-light/10 bg-linear-to-br from-(--bg-color)/40 to-(--bg-color)/80 p-4 text-(--text-color)"
 	>
 		<div class="w-full">
-			<p class="text-left text-lg leading-tight font-bold">
+			<p class="text-left text-xl leading-tight font-bold">
 				{card.title}
 			</p>
-			{#if issuerMint}
+			{#if issuerMint && issuerMint.totalUnits > 1}
 				<p class="mt-1 text-left text-[10px] font-bold opacity-60">
 					{issuerMint.usedUnits}/{issuerMint.totalUnits} USADOS
 				</p>

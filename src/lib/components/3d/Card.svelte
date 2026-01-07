@@ -70,7 +70,7 @@
 
 <!-- TODO: mejorar margenes y tamaños para el footer tenga espacio para la descripcion y añadir la fecha de caducidad -->
 
-<T.Group rotation={[rotationX, rotationY, 0]} position={[0, 0.75, 0]}>
+<T.Group rotation={[rotationX, rotationY, 0]} position={[0, 0.25, 0]}>
 	{#if card}
 		<T.Mesh>
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
