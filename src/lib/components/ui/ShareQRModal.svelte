@@ -29,14 +29,14 @@
 </script>
 
 <Modal closeModal={onClose}>
-	<div class="flex flex-col items-center text-center">
-		<h3 class="mb-2 text-3xl font-bold text-light">Compartir</h3>
-		<p class="mb-8 text-neutral-400">
+	<div class="flex flex-col items-center p-6 text-center">
+		<h3 class="mb-1 text-2xl font-bold text-light">Compartir</h3>
+		<p class="mb-6 text-sm text-neutral-400">
 			Escanea este código para recibir tu <strong>Mint</strong>.
 		</p>
 
 		<!-- QR CONTAINER -->
-		<div class="mb-8 w-full overflow-hidden rounded-2xl bg-white p-2 shadow-inner">
+		<div class="mb-6 w-full scale-95 overflow-hidden rounded-2xl bg-white p-2 shadow-inner">
 			{#if qrDataURL}
 				<img src={qrDataURL} alt="QR Code" class="w-full" />
 			{:else}

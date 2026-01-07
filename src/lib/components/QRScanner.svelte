@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Html5Qrcode } from 'html5-qrcode';
-	import { fade } from 'svelte/transition';
 	import Back from './Back.svelte';
 
 	interface Props {
@@ -69,58 +68,20 @@
 	}
 </script>
 
-<div
-	transition:fade={{ duration: 300 }}
-	class="bg-opacity-95 fixed inset-0 z-100 flex flex-col bg-black"
->
+<div>
+	<Back />
+
 	<!-- SCANNER CONTAINER (FULLSCREEN) -->
 	<div id="qr-reader" class="h-svh w-full overflow-hidden"></div>
 
 	<!-- OVERLAY UI -->
 	<div class="pointer-events-none absolute inset-0 z-10 flex flex-col">
-		<!-- HEADER -->
-		<div
-			class="pointer-events-auto flex items-center justify-between bg-linear-to-b from-black/80 to-transparent p-6 pt-12"
-		>
-			<div class="flex flex-col">
-				<h2 class="text-xl font-bold text-white">Escaneando...</h2>
-				<p class="text-xs text-neutral-400">Centra el código QR en el cuadro</p>
-			</div>
-
-			<Back />
-		</div>
-
 		<!-- CENTER MASK (Visual decoration) -->
-		<div class="relative flex flex-1 items-center justify-center">
-			<div
-				class="relative h-64 w-64 rounded-3xl border-2 border-white/20 shadow-[0_0_0_100vmax_rgba(0,0,0,0.5)]"
-			>
-				<!-- CORNERS -->
-				<div
-					class="absolute -top-1 -left-1 h-8 w-8 rounded-tl-2xl border-t-4 border-l-4 border-white"
-				></div>
-				<div
-					class="absolute -top-1 -right-1 h-8 w-8 rounded-tr-2xl border-t-4 border-r-4 border-white"
-				></div>
-				<div
-					class="absolute -bottom-1 -left-1 h-8 w-8 rounded-bl-2xl border-b-4 border-l-4 border-white"
-				></div>
-				<div
-					class="absolute -right-1 -bottom-1 h-8 w-8 rounded-br-2xl border-r-4 border-b-4 border-white"
-				></div>
-
-				<!-- SCANNING LINE ANIMATION -->
-				{#if isScanning}
-					<div
-						class="absolute inset-x-4 top-0 h-1 animate-[scan_2s_infinite] bg-linear-to-r from-transparent via-purple-500 to-transparent shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-					></div>
-				{/if}
-			</div>
-		</div>
+		<div class="relative flex flex-1 items-center justify-center"></div>
 
 		<!-- FOOTER -->
 		<div class="bg-linear-to-t from-black/80 to-transparent p-12 text-center">
-			<p class="text-xs text-neutral-400">Compatible con tarjetas físicas y digitales</p>
+			<p class="text-sm text-neutral-400">Centra el código QR en el cuadro</p>
 		</div>
 	</div>
 </div>
