@@ -15,7 +15,7 @@
 </script>
 
 <Text
-	position={[-1, 1.6, 0.03]}
+	position={[-1.1, 1.7, 0.03]}
 	font="/fonts/Eina01-Bold.ttf"
 	{text}
 	{lineHeight}

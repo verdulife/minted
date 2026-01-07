@@ -6,3 +6,7 @@
 	--color-dark: #05050a;
 	--color-light: #fafaf5;
 }
+
+@utility scrollbar-none {
+	scrollbar-width: none;
+}

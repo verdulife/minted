@@ -173,7 +173,7 @@
 		<div class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-dark">
 			<Back onClick={closeDetail} />
 
-			<div class="relative h-svh overflow-clip">
+			<div class="relative h-svh w-full overflow-clip">
 				<Scene card={selectedMint} />
 
 				<div class="pointer-events-none absolute right-0 bottom-0 left-0 z-20 flex flex-col p-6">

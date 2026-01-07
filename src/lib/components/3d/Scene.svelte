@@ -60,18 +60,18 @@
 </script>
 
 <div
+	class="size-full cursor-grab select-none active:cursor-grabbing"
 	tabindex="0"
 	role="button"
 	aria-label="Visualizador de tarjeta 3D"
 	style="touch-action: none"
-	class="relative h-full w-full cursor-grab select-none active:cursor-grabbing"
 	onpointerdown={handlePointerDown}
 	onpointermove={handlePointerMove}
 	onpointerup={handlePointerUp}
 	onpointerleave={handlePointerUp}
 >
 	<Canvas>
-		<T.PerspectiveCamera makeDefault position={[0, 0, 7]} fov={49} />
+		<T.PerspectiveCamera makeDefault position={[0, 0, 6]} fov={50} />
 
 		<T.AmbientLight intensity={Math.PI} />
 

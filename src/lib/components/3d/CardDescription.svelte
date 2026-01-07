@@ -9,8 +9,8 @@
 
 	let { text, color }: Props = $props();
 
-	const fontSize = 0.12;
-	const maxWidth = 2;
+	const fontSize = 0.11;
+	const maxWidth = 2.2;
 	const lineHeight = 1.4;
 </script>
 
@@ -33,7 +33,7 @@
 </T.Mesh>
 
 <Text
-	position={[-1, -1.2, 0.03]}
+	position={[-1.1, -1.1, 0.03]}
 	font="/fonts/Eina01-Regular.ttf"
 	{text}
 	{lineHeight}

@@ -1,0 +1,114 @@
+<script lang="ts">
+	import Modal from './Modal.svelte';
+
+	interface Props {
+		color: string;
+		effect: string;
+		closeModal: () => void;
+		handleGeneratePreview: () => void;
+	}
+
+	let {
+		color = $bindable(),
+		effect = $bindable(),
+		closeModal,
+		handleGeneratePreview
+	}: Props = $props();
+
+	function handleApply() {
+		handleGeneratePreview();
+		closeModal();
+	}
+</script>
+
+<Modal {closeModal}>
+	<main class="flex flex-col gap-6 p-6">
+		<div class="flex flex-col gap-4">
+			<p class="text-xs font-semibold text-neutral-400">Color</p>
+
+			<div class="flex gap-2">
+				<!-- Rojo -->
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'tomato'}>
+					<div class="flex size-full rounded-full bg-[tomato]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="tomato" />
+				</label>
+
+				<!-- Azul -->
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'blue'}>
+					<div class="flex size-full rounded-full bg-[blue]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="blue" />
+				</label>
+
+				<!-- Dorado -->
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'gold'}>
+					<div class="flex size-full rounded-full bg-[gold]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="gold" />
+				</label>
+
+				<!-- Negro -->
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'black'}>
+					<div class="flex size-full rounded-full bg-[#222]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="black" />
+				</label>
+
+				<!-- Blanco -->
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'white'}>
+					<div class="flex size-full rounded-full bg-[white]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="white" />
+				</label>
+			</div>
+		</div>
+
+		<div class="flex flex-col gap-4">
+			<p class="text-xs font-semibold text-neutral-400">Efecto</p>
+
+			<div class="grid grid-cols-2 gap-2">
+				<!-- Plástico brillante -->
+				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'plastic'}>
+					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+						Plástico brillante
+					</div>
+					<input class="hidden" type="radio" bind:group={effect} value="plastic" />
+				</label>
+
+				<!-- Metalizado -->
+				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'metalized'}>
+					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+						Metalizado
+					</div>
+					<input class="hidden" type="radio" bind:group={effect} value="metalized" />
+				</label>
+
+				<!-- Holográfico -->
+				<label
+					class="h-12 rounded-full border-light p-0.5"
+					class:border-2={effect === 'holographic'}
+				>
+					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+						Holográfico
+					</div>
+					<input class="hidden" type="radio" bind:group={effect} value="holographic" />
+				</label>
+
+				<!-- Espejo -->
+				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'mirror'}>
+					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
+						Espejo
+					</div>
+					<input class="hidden" type="radio" bind:group={effect} value="mirror" />
+				</label>
+			</div>
+		</div>
+	</main>
+
+	<footer
+		class="sticky bottom-0 z-50 flex w-full items-center justify-center bg-linear-to-b from-transparent to-dark p-6"
+	>
+		<button
+			onclick={handleApply}
+			class="w-full rounded-full border border-light/10 bg-dark/70 p-4 font-semibold backdrop-blur"
+		>
+			Aplicar cambios
+		</button>
+	</footer>
+</Modal>
