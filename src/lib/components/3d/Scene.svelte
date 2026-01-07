@@ -70,12 +70,12 @@
 	onpointerup={handlePointerUp}
 	onpointerleave={handlePointerUp}
 >
-	<Canvas>
+	<Canvas dpr={Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)}>
 		<T.PerspectiveCamera makeDefault position={[0, 0, 6]} fov={50} />
 
 		<T.AmbientLight intensity={Math.PI} />
 
-		<Environment url="/textures/studio_small_08.hdr" isBackground={false} />
+		<Environment url="/textures/black.jpg" isBackground={false} />
 		<T.Light
 			intensity={2}
 			color="white"
