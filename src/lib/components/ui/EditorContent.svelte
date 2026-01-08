@@ -24,6 +24,10 @@
 		handleGeneratePreview
 	}: Props = $props();
 
+	let year = $derived(new Date(expiryDate).getFullYear());
+	let month = $derived(new Date(expiryDate).getMonth());
+	let yearMonth = $derived(`${year}-${String(month + 1).padStart(2, '0')}`);
+
 	function handleApply() {
 		handleGeneratePreview();
 		closeModal();
@@ -99,36 +103,24 @@
 
 			<label class="flex w-full flex-col gap-3">
 				<input
-					type="datetime-local"
-					bind:value={expiryDate}
+					type="month"
+					bind:value={yearMonth}
 					min={minDate}
 					class="w-full max-w-full appearance-none rounded-lg border border-light/10 bg-light/5 p-3 font-medium outline-none focus:border-light/70"
 				/>
 
 				<div class="flex flex-wrap gap-2">
 					<button
-						onclick={() => addTime(EXPIRATION_PRESETS['24H'])}
-						class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
-					>
-						+24H
-					</button>
-					<button
-						onclick={() => addTime(EXPIRATION_PRESETS['1W'])}
-						class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
-					>
-						+1 SEMANA
-					</button>
-					<button
 						onclick={() => addTime(EXPIRATION_PRESETS['1M'])}
 						class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
 					>
-						+1 MES
+						+1 Mes
 					</button>
 					<button
 						onclick={() => addTime(EXPIRATION_PRESETS['1Y'])}
 						class="flex-1 rounded-full border border-light/10 bg-light/5 py-2 text-[10px] font-bold transition-all hover:bg-light/10 focus:bg-light/20 focus:outline-none active:scale-95"
 					>
-						+1 AÑO
+						+1 Año
 					</button>
 				</div>
 			</label>

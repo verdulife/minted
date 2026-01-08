@@ -7,6 +7,7 @@
 	interface Props {
 		card: Card;
 	}
+
 	let { card }: Props = $props();
 
 	// --- Lógica de Interacción ---
@@ -46,8 +47,8 @@
 
 		// Limitamos la inclinación (aprox ±30 grados = 0.5 rad)
 		const limit = 0.5;
-		targetX = y * limit * 2;
-		targetY = currentBaseRotationY + x * limit * 2;
+		targetX = y * limit * 2.5;
+		targetY = currentBaseRotationY + x * limit * 2.5;
 	}
 
 	function handlePointerUp(e: PointerEvent) {

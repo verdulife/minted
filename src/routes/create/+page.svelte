@@ -18,7 +18,7 @@
 	// Inputs del usuario
 	let title = $state('Ejemplo de valor de carta');
 	let description = $state('Ejemplo de anotaciones con un texto ligeramente largo.');
-	let color = $state('tomato');
+	let color = $state('crimson');
 	let effect: 'plastic' | 'metalized' | 'holographic' | 'mirror' = $state('plastic');
 	let totalUnits = $state(1);
 
@@ -43,7 +43,7 @@
 		id: 'preview',
 		title: 'Valor de la mejor mint del mundo',
 		description: 'Descripción...',
-		visualConfig: { effect: 'plastic', color: 'tomato' },
+		visualConfig: { effect: 'plastic', color: 'crimson' },
 		issuerPublicKey: { kty: 'OKP', crv: 'Ed25519', x: '', y: '' } as JsonWebKey,
 		signature: '',
 		createdAt: Date.now(),

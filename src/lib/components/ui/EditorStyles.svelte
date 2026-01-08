@@ -28,9 +28,9 @@
 
 			<div class="flex gap-2">
 				<!-- Rojo -->
-				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'tomato'}>
-					<div class="flex size-full rounded-full bg-[tomato]"></div>
-					<input class="hidden" type="radio" bind:group={color} value="tomato" />
+				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'crimson'}>
+					<div class="flex size-full rounded-full bg-[crimson]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="crimson" />
 				</label>
 
 				<!-- Azul -->
