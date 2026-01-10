@@ -2,7 +2,7 @@
 	import { db, type Mint } from '$lib/db';
 	import { onMount, onDestroy } from 'svelte';
 	import { liveQuery } from 'dexie';
-	import { isExpired, canDelete } from '$lib/logic';
+	import { canDelete } from '$lib/logic';
 	import { page } from '$app/stores';
 	import CollectionGrid from '$lib/components/ui/CollectionGrid.svelte';
 	import Scene from '@/lib/components/3d/Scene.svelte';
@@ -15,12 +15,11 @@
 	let myMints = liveQuery(() => db.table('myMints').toArray());
 	let collection = liveQuery(() => db.table('collection').toArray());
 
-	// TODO: create preopen state
-	/* let searchParams = $page.url.searchParams;
-	let mintParam = searchParams.get('m'); */
+	let searchParams = $page.url.searchParams;
+	let mintId = searchParams.get('id');
+	let mintPromise = mintId ? db.table('collection').where('id').equals(mintId).first() : null;
 
 	let activeTab = $state<'mine' | 'received'>('mine');
-	let subTab = $state<'active' | 'inactive'>('active');
 	let selectedMint = $state<Mint | null>();
 	let showShareModal = $state(false);
 
@@ -73,6 +72,13 @@
 			alert('Hubo un error al intentar eliminar la carta.');
 		}
 	}
+
+	onMount(async () => {
+		if (mintPromise) {
+			selectedMint = await mintPromise;
+			console.log(selectedMint);
+		}
+	});
 </script>
 
 <div>

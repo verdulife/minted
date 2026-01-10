@@ -15,11 +15,8 @@
 
 	onMount(async () => {
 		try {
-			// Pequeño delay para asegurar que el DOM esté listo y las transiciones no interfieran
-			setTimeout(async () => {
-				scanner = new Html5Qrcode('qr-reader');
-				await startScanning();
-			}, 300);
+			scanner = new Html5Qrcode('qr-reader');
+			await startScanning();
 		} catch (error) {
 			console.error('Error inicializando escáner:', error);
 			if (onError) onError('No se pudo acceder a la cámara');
@@ -87,24 +84,6 @@
 </div>
 
 <style>
-	@keyframes scan {
-		0%,
-		100% {
-			top: 10%;
-			opacity: 0;
-		}
-		20% {
-			opacity: 1;
-		}
-		80% {
-			opacity: 1;
-		}
-		100% {
-			top: 90%;
-			opacity: 0;
-		}
-	}
-
 	/* Estilos para el video que genera html5-qrcode */
 	:global(#qr-reader video) {
 		object-fit: cover !important;

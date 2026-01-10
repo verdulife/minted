@@ -27,11 +27,7 @@
 		try {
 			// 1. Decodificar datos
 			let decoded: Mint;
-			if (isCompressedMint(text)) {
-				decoded = decodeMint(text) as any;
-			} else {
-				decoded = JSON.parse(text);
-			}
+			decoded = decodeMint(text) as any;
 
 			// 2. ¿Soy el emisor?
 			const myMint = await db.myMints.get(decoded.id);
@@ -152,10 +148,10 @@
 						Se ha añadido <strong>{result.mint.title}</strong> a tu colección correctamente.
 					</p>
 					<button
-						onclick={() => goto('/')}
+						onclick={() => goto('/' + result.mint.id)}
 						class="mb-3 w-full rounded-2xl bg-white py-4 text-sm font-bold text-black transition-all active:scale-95"
 					>
-						Ver mi colección
+						Ver Mint
 					</button>
 				{:else}
 					<!-- ICONO ERROR -->
