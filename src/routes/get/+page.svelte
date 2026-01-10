@@ -6,6 +6,12 @@
 	import { processScannedCard } from '@/lib/qr';
 	import { isExpired } from '@/lib/logic';
 	import { fade, scale } from 'svelte/transition';
+	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+
+	const { url } = $page;
+	const base64Data = url.searchParams.get('m');
+	const mint = base64Data ? atob(base64Data) : null;
 
 	// Estado
 	type ScanResult =
@@ -72,6 +78,12 @@
 	function closeResult() {
 		result = null;
 	}
+
+	onMount(() => {
+		if (mint) {
+			handleScan(mint);
+		}
+	});
 </script>
 
 <div class="h-svh w-full bg-black">
@@ -179,9 +191,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	:global(body) {
-		overflow: hidden;
-	}
-</style>
