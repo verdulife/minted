@@ -168,14 +168,14 @@ export async function createAndMintCard(
       effect: 'plastic' | 'metalized' | 'holographic' | 'mirror';
       color: string;
     };
-    expiresAt: number;
+    expiresAt: string;
     totalUnits?: number;
   }
 ): Promise<IssuerMint> {
   // Validación de fecha de caducidad
-  if (!cardInput.expiresAt || isNaN(cardInput.expiresAt) || cardInput.expiresAt <= Date.now()) {
+  /* if (!cardInput.expiresAt || isNaN(cardInput.expiresAt) || cardInput.expiresAt <= Date.now()) {
     throw new Error('La fecha de caducidad debe ser un timestamp válido en el futuro.');
-  }
+  } */
 
   // Generar ID único
   const id = crypto.randomUUID();

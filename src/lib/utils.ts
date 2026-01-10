@@ -1,8 +1,5 @@
-export function formatExpirationDate(expiresAt: number): string {
-  const date = new Date(expiresAt);
-
-  return new Intl.DateTimeFormat("en", {
-    year: '2-digit',
-    month: '2-digit',
-  }).format(date);
+export function formatExpirationDate(expiresAt: string): string {
+  const [year, month] = expiresAt.split('-');
+  const twoDigitYear = year.slice(-2);
+  return `${month}/${twoDigitYear}`;
 }

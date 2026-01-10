@@ -25,16 +25,14 @@
 			{color}
 			map={$logoTexture}
 			transparent={true}
-			metalness={0.5}
-			roughness={0.3}
+			metalness={1}
+			roughness={0}
 			clearcoat={1}
 			clearcoatRoughness={0.15}
-			iridescence={1}
-			iridescenceIOR={1}
-			iridescenceThicknessRange={[0, 2400]}
-			transmission={0.5}
-			thickness={1}
-			attenuationDistance={0.5}
+			reflectivity={1}
+			iridescence={0}
+			iridescenceIOR={0}
+			iridescenceThicknessRange={[0, 480]}
 		/>
 	{/if}
 </T.Mesh>

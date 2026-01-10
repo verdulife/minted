@@ -10,6 +10,10 @@
 
 	let { card }: Props = $props();
 
+	let url = $derived(
+		card.visualConfig.effect !== 'holographic' ? '/textures/squares-hd.jpg' : '/textures/holo.jpg'
+	);
+
 	// --- Lógica de Interacción ---
 	let targetX = $state(0);
 	let targetY = $state(0);
@@ -74,37 +78,9 @@
 	<Canvas dpr={Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)}>
 		<T.PerspectiveCamera makeDefault position={[0, 0, 6]} fov={50} />
 
-		<T.AmbientLight intensity={Math.PI} />
-
-		<Environment url="/textures/black.jpg" isBackground={false} />
-		<T.Light
-			intensity={2}
-			color="white"
-			position={[0, -1, 5]}
-			rotation={[0, 0, Math.PI / 3]}
-			scale={[100, 0.1, 1]}
-		/>
-		<T.Light
-			intensity={3}
-			color="white"
-			position={[-1, -1, 1]}
-			rotation={[0, 0, Math.PI / 3]}
-			scale={[100, 0.1, 1]}
-		/>
-		<T.Light
-			intensity={3}
-			color="white"
-			position={[1, 1, 1]}
-			rotation={[0, 0, Math.PI / 3]}
-			scale={[100, 0.1, 1]}
-		/>
-		<T.Light
-			intensity={10}
-			color="white"
-			position={[-10, 0, 14]}
-			rotation={[0, Math.PI / 2, Math.PI / 3]}
-			scale={[100, 10, 1]}
-		/>
+		<T.AmbientLight intensity={0.5} color="white" />
+		<T.DirectionalLight position={[0.3, 1.3, 2.1]} intensity={0.5} color="white" />
+		<Environment {url} isBackground={false} />
 
 		<CardModel {card} {targetX} {targetY} isInteracting={isPointerDown} />
 	</Canvas>

@@ -22,7 +22,7 @@ export interface MintBase {
   issuerPublicKey: JsonWebKey;
   signature: string;
   createdAt: number;
-  expiresAt: number;
+  expiresAt: string;
 }
 
 // Mint issued by the user (owner/issuer)

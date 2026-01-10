@@ -40,9 +40,12 @@
 				</label>
 
 				<!-- Dorado -->
-				<label class="size-12 rounded-full border-light p-0.5" class:border-2={color === 'gold'}>
-					<div class="flex size-full rounded-full bg-[gold]"></div>
-					<input class="hidden" type="radio" bind:group={color} value="gold" />
+				<label
+					class="size-12 rounded-full border-light p-0.5"
+					class:border-2={color === 'goldenrod'}
+				>
+					<div class="flex size-full rounded-full bg-[goldenrod]"></div>
+					<input class="hidden" type="radio" bind:group={color} value="goldenrod" />
 				</label>
 
 				<!-- Negro -->
@@ -63,37 +66,37 @@
 			<p class="text-xs font-semibold text-neutral-400">Efecto</p>
 
 			<div class="grid grid-cols-2 gap-2">
-				<!-- Plástico brillante -->
+				<!-- Plastic -->
 				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'plastic'}>
 					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
-						Plástico brillante
+						Plastic
 					</div>
 					<input class="hidden" type="radio" bind:group={effect} value="plastic" />
 				</label>
 
-				<!-- Metalizado -->
+				<!-- Metal -->
 				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'metalized'}>
 					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
-						Metalizado
+						Metal
 					</div>
 					<input class="hidden" type="radio" bind:group={effect} value="metalized" />
 				</label>
 
-				<!-- Holográfico -->
+				<!-- Holo -->
 				<label
 					class="h-12 rounded-full border-light p-0.5"
 					class:border-2={effect === 'holographic'}
 				>
 					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
-						Holográfico
+						Holo
 					</div>
 					<input class="hidden" type="radio" bind:group={effect} value="holographic" />
 				</label>
 
-				<!-- Espejo -->
+				<!-- Mirror -->
 				<label class="h-12 rounded-full border-light p-0.5" class:border-2={effect === 'mirror'}>
 					<div class="flex size-full items-center justify-center rounded-full bg-light/10">
-						Espejo
+						Mirror
 					</div>
 					<input class="hidden" type="radio" bind:group={effect} value="mirror" />
 				</label>

@@ -22,5 +22,5 @@
 	{maxWidth}
 	{fontSize}
 >
-	<T.MeshPhysicalMaterial {color} metalness={0.7} roughness={0} />
+	<T.MeshPhysicalMaterial {color} metalness={0} roughness={1} />
 </Text>

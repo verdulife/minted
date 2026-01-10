@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type Mint, type IssuerMint } from '@/lib/db';
-	import Logo from '@/lib/assets/Logo.svelte';
+	import { isExpired } from '@/lib/logic';
+	import { formatExpirationDate } from '@/lib/utils';
 
 	interface Props {
 		card: Mint;
@@ -12,30 +13,41 @@
 	// Helper to check if it's an issuer mint
 	const issuerMint = $derived('totalUnits' in card ? (card as IssuerMint) : null);
 
-	let bgColor = $derived(card.visualConfig.color);
-	let textColor = $derived(card.visualConfig.color === 'black' ? 'white' : 'black');
+	let bgColor = $derived(() => {
+		if (card.visualConfig.effect === 'holographic') {
+			return 'linear-gradient(60deg,cyan,lightgreen,magenta)';
+		} else {
+			return `linear-gradient(${card.visualConfig.color})`;
+		}
+	});
+	let textColor = $derived(() => {
+		if (card.visualConfig.effect === 'holographic') return 'black';
+		else if (bgColor() === 'white') return 'black';
+		else if (bgColor() === 'goldenrod') return 'black';
+		else return 'white';
+	});
 </script>
 
 <button
-	style="--bg-color: {bgColor}"
-	class="aspect-63/88 overflow-hidden rounded-xl bg-light shadow-lg"
+	style="--bg-color: {bgColor()}; --text-color: {textColor()}"
+	class="relative flex aspect-63/88 h-full flex-col items-center justify-between overflow-hidden rounded-xl border-t border-r border-light/20 [background-image:var(--bg-color)] p-3 text-(--text-color) shadow shadow-black/50"
+	class:opacity-25={isExpired(card.expiresAt)}
 	onclick={() => onClick?.(card)}
 >
-	<div
-		style="--text-color: {textColor}"
-		class="flex h-full flex-col items-center justify-between border border-light/10 bg-linear-to-br from-(--bg-color)/40 to-(--bg-color)/80 p-4 text-(--text-color)"
-	>
-		<div class="w-full">
-			<p class="text-left text-xl leading-tight font-bold">
-				{card.title}
-			</p>
+	<div class="flex size-full flex-col text-left">
+		<p class="text-lg leading-tight font-bold">
+			{card.title}
+		</p>
+		<div class="mt-auto flex justify-between font-mono text-[11px]">
+			<p>{formatExpirationDate(card.expiresAt)}</p>
+
 			{#if issuerMint && issuerMint.totalUnits > 1}
-				<p class="mt-1 text-left text-[10px] font-bold opacity-60">
-					{issuerMint.usedUnits}/{issuerMint.totalUnits} USADOS
-				</p>
+				<p>{issuerMint.totalUnits}u</p>
 			{/if}
 		</div>
-
-		<Logo class="h-3 opacity-50" />
+		<hr class="my-1.5" />
+		<p class="text-[9px]">
+			{card.description}
+		</p>
 	</div>
 </button>

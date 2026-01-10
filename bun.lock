@@ -11,6 +11,7 @@
         "html5-qrcode": "^2.3.8",
         "qrcode": "^1.5.4",
         "three": "^0.182.0",
+        "tsl-textures": "^2.5.1",
       },
       "devDependencies": {
         "@eslint/compat": "^1.4.0",
@@ -694,6 +695,8 @@
     "troika-worker-utils": ["troika-worker-utils@0.52.0", "", {}, "sha512-W1CpvTHykaPH5brv5VHLfQo9D1OYuo0cSBEUQFFT/nBUzM8iD6Lq2/tgG/f1OelbAS1WtaTPQzE5uM49egnngw=="],
 
     "ts-api-utils": ["ts-api-utils@2.4.0", "", { "peerDependencies": { "typescript": ">=4.8.4" } }, "sha512-3TaVTaAv2gTiMB35i3FiGJaRfwb3Pyn/j3m/bfAvGe8FB7CF6u+LMYqYlDh7reQf7UNvoTvdfAqHGmPGOSsPmA=="],
+
+    "tsl-textures": ["tsl-textures@2.5.1", "", {}, "sha512-SfooWvxYArvSxzOKvil26gCZycUC94fn0elAh5grH62XY89Fut/NWCjfbPea2jSN1+hSeR6NfQVdtBQWXnZlaQ=="],
 
     "tweakpane": ["tweakpane@3.1.10", "", {}, "sha512-rqwnl/pUa7+inhI2E9ayGTqqP0EPOOn/wVvSWjZsRbZUItzNShny7pzwL3hVlaN4m9t/aZhsP0aFQ9U5VVR2VQ=="],
 

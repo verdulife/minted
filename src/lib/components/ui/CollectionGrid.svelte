@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { type Mint } from '@/lib/db';
 	import CardThumbnail from '@/lib/components/ui/CardThumbnail.svelte';
+	import Card from '../3d/Card.svelte';
 
 	interface Props {
 		cards: Mint[];
@@ -9,10 +10,14 @@
 	}
 
 	let { cards, activeTab, onCardClick }: Props = $props();
+
+	function dateSort(a: Mint, b: Mint) {
+		return a.createdAt - b.createdAt;
+	}
 </script>
 
 {#if cards.length === 0}
-	<div class="flex flex-col items-center justify-center gap-4 py-20 text-center">
+	<div class="flex flex-col items-center justify-center gap-4 pt-20 text-center">
 		{#if activeTab === 'mine'}
 			<p class="text-sm text-neutral-400">No has creado ninguna carta todavía</p>
 
@@ -29,9 +34,9 @@
 	</div>
 {:else}
 	<div
-		class="grid grid-cols-2 gap-4 p-4 pb-30 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+		class="grid grid-cols-2 gap-2.5 px-4 pt-0 pb-30 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
 	>
-		{#each cards as card (card.id)}
+		{#each cards.sort(dateSort) as card (card.id)}
 			<CardThumbnail {card} onClick={onCardClick} />
 		{/each}
 	</div>

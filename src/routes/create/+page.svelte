@@ -2,7 +2,6 @@
 	import { type IssuerMint, type Mint } from '@/lib/db';
 	import { goto } from '$app/navigation';
 	import { identity } from '@/lib/stores';
-	import { EXPIRATION_PRESETS } from '@/lib/consts';
 	import { createAndMintCard } from '@/lib/crypto';
 	import Scene from '@/lib/components/3d/Scene.svelte';
 	import CreateIcon from '@/lib/assets/CreateIcon.svelte';
@@ -25,21 +24,19 @@
 	let isMinting = $state(false);
 
 	// Expiración
-	const formatDateForInput = (date: Date) => {
-		const pad = (n: number) => n.toString().padStart(2, '0');
-		return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-	};
+	let year = new Date().getFullYear();
+	let month = new Date().getMonth() + 1;
+	let expiresAt = $state(year + '-' + month.toString().padStart(2, '0'));
+	/* let minDate = $derived(formatDateForInput(new Date())); */
 
-	let expiryDate = $state(formatDateForInput(new Date(Date.now() + EXPIRATION_PRESETS['1W'])));
-	let minDate = $derived(formatDateForInput(new Date()));
-
-	function addTime(ms: number) {
-		const current = expiryDate ? new Date(expiryDate).getTime() : Date.now();
-		expiryDate = formatDateForInput(new Date(current + ms));
+	function addTime({ y = 0, m = 0 }) {
+		const [year, month] = expiresAt.split('-');
+		expiresAt =
+			(Number(year) + y).toString() + '-' + (Number(month) + m).toString().padStart(2, '0');
 	}
 
 	// Card Data para el 3D (Solo se actualiza al generar)
-	let previewCard: IssuerMint = $state({
+	let previewCard: IssuerMint = $derived({
 		id: 'preview',
 		title: 'Valor de la mejor mint del mundo',
 		description: 'Descripción...',
@@ -47,7 +44,7 @@
 		issuerPublicKey: { kty: 'OKP', crv: 'Ed25519', x: '', y: '' } as JsonWebKey,
 		signature: '',
 		createdAt: Date.now(),
-		expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+		expiresAt,
 		status: 'active',
 		totalUnits: 1,
 		usedUnits: 0
@@ -72,7 +69,7 @@
 				effect,
 				color
 			},
-			expiresAt: new Date(expiryDate).getTime(),
+			expiresAt,
 			totalUnits,
 			usedUnits: 0
 		} as IssuerMint;
@@ -87,15 +84,16 @@
 		}
 
 		isMinting = true;
+
 		try {
-			const card = await createAndMintCard($identity, {
+			await createAndMintCard($identity, {
 				title,
 				description,
 				visualConfig: { effect, color },
-				expiresAt: new Date(expiryDate).getTime(),
+				expiresAt,
 				totalUnits
 			});
-			console.log('✅ Carta creada:', card);
+
 			goto('/');
 		} catch (e) {
 			console.error('Error creando carta:', e);
@@ -160,12 +158,21 @@
 </div>
 
 {#if contentEditor}
-	<EditorContent
+	<!-- <EditorContent
 		bind:title
 		bind:description
 		bind:totalUnits
 		bind:expiryDate
 		{minDate}
+		{addTime}
+		closeModal={toggleContentEditor}
+		{handleGeneratePreview}
+	/> -->
+	<EditorContent
+		bind:title
+		bind:description
+		bind:totalUnits
+		bind:expiresAt
 		{addTime}
 		closeModal={toggleContentEditor}
 		{handleGeneratePreview}

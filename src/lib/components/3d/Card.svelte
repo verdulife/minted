@@ -14,7 +14,16 @@
 	}
 
 	let { card, targetX = 0, targetY = 0, isInteracting = false }: Props = $props();
-	let textColor = $derived(card.visualConfig.color === 'white' ? 'black' : 'white');
+
+	let color = $derived(
+		card.visualConfig.effect === 'holographic' ? 'white' : card.visualConfig.color
+	);
+	let textColor = $derived(() => {
+		if (card.visualConfig.effect === 'holographic') return 'black';
+		else if (color === 'white') return 'black';
+		else if (color === 'goldenrod') return 'black';
+		else return 'white';
+	});
 
 	let rotationX = $state(0);
 	let rotationY = $state(0);
@@ -40,31 +49,41 @@
 		depth,
 		bevelEnabled: true,
 		bevelThickness: 0.004,
-		bevelSize: 0.01,
-		bevelSegments: 10
+		bevelSize: 0.015,
+		bevelSegments: 2
 	};
 
 	let metalness = $state(0.5);
 	let roughness = $state(0.5);
-	let clearcoat = $state(1);
+	let clearcoat = $state(0.5);
 	let clearcoatRoughness = $state(0.5);
+	let reflectivity = $state(0.5);
 
 	$effect(() => {
-		if (card.visualConfig.effect === 'metalized') {
-			metalness = 0.8;
+		if (card.visualConfig.effect === 'plastic') {
+			metalness = 0.1;
+			roughness = 0.0;
+			clearcoat = 0.0;
+			clearcoatRoughness = 0.5;
+			reflectivity = color === 'black' ? 0.3 : 1;
+		} else if (card.visualConfig.effect === 'metalized') {
+			metalness = color === 'black' ? 0.7 : 1;
 			roughness = 0.2;
-			clearcoat = 1;
-			clearcoatRoughness = 0.1;
-		} else if (card.visualConfig.effect === 'plastic') {
-			metalness = 1;
-			roughness = 0.3;
-			clearcoat = 1;
-			clearcoatRoughness = 0.25;
+			clearcoat = 0.0;
+			clearcoatRoughness = 0.0;
+			reflectivity = 1;
 		} else if (card.visualConfig.effect === 'mirror') {
 			metalness = 1.0;
 			roughness = 0.0;
 			clearcoat = 1.0;
+			clearcoatRoughness = 0.5;
+			reflectivity = 0.0;
+		} else if (card.visualConfig.effect === 'holographic') {
+			metalness = 1.0;
+			roughness = 0.0;
+			clearcoat = 0.0;
 			clearcoatRoughness = 0.0;
+			reflectivity = 0.0;
 		}
 	});
 
@@ -75,9 +94,9 @@
 		rotationY += (targetY - rotationY) * lerpFactor;
 
 		if (!isInteracting) {
-			const time = Date.now() / 2000;
-			rotationX += Math.sin(time) * 0.001;
-			rotationY += Math.cos(time) * 0.001;
+			const time = Date.now() / 1000;
+			rotationX += Math.sin(time) * 0.0025;
+			rotationY += Math.cos(time) * 0.0025;
 		}
 	});
 </script>
@@ -90,21 +109,20 @@
 			<T.ExtrudeGeometry args={[shape, extrudeSettings]} />
 
 			<T.MeshPhysicalMaterial
-				color={card.visualConfig.color}
+				{color}
 				{metalness}
 				{roughness}
 				{clearcoat}
 				{clearcoatRoughness}
+				{reflectivity}
 				iridescence={0}
 				iridescenceIOR={0}
 				iridescenceThicknessRange={[0, 480]}
-				thickness={1}
-				attenuationDistance={0.5}
 			/>
 		</T.Mesh>
 
-		<CardTitle text={card.title} color={textColor} />
-		<CardDescription text={card.description} expiration={card.expiresAt} color={textColor} />
-		<CardLogo color={textColor} />
+		<CardTitle text={card.title} color={textColor()} />
+		<CardDescription text={card.description} expiration={card.expiresAt} color={textColor()} />
+		<CardLogo color={textColor()} />
 	{/if}
 </T.Group>

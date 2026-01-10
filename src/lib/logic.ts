@@ -3,8 +3,14 @@ import type { IssuerMint, ReceivedMint } from '@/lib/db';
 /**
  * Checks if a timestamp (Unix ms) is in the past.
  */
-export function isExpired(expiresAt: number): boolean {
-  return Date.now() > expiresAt;
+export function isExpired(expiresAt: string): boolean {
+  const [year, month] = expiresAt.split('-');
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  if (Number(year) < currentYear) return true;
+  if (Number(year) === currentYear && Number(month) < currentMonth) return true;
+  return false;
 }
 
 /**

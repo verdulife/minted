@@ -1,41 +1,27 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import { db, type Mint } from '$lib/db';
+	import { onMount, onDestroy } from 'svelte';
 	import { liveQuery } from 'dexie';
+	import { isExpired, canDelete } from '$lib/logic';
+	import { page } from '$app/stores';
 	import CollectionGrid from '$lib/components/ui/CollectionGrid.svelte';
 	import Scene from '@/lib/components/3d/Scene.svelte';
 	import ShareQRModal from '@/lib/components/ui/ShareQRModal.svelte';
-	import { isExpired, canDelete } from '$lib/logic';
 	import TrashIcon from '@/lib/assets/TrashIcon.svelte';
 	import Nav from '@/lib/components/Nav.svelte';
 	import Back from '@/lib/components/Back.svelte';
-	import { page } from '$app/stores';
 
 	// Queries reactivas usando Dexie liveQuery
 	let myMints = liveQuery(() => db.table('myMints').toArray());
 	let collection = liveQuery(() => db.table('collection').toArray());
 
-	let searchParams = $page.url.searchParams;
-	let mintParam = searchParams.get('m');
-	let mintCollection = $derived(() => {
-		if (mintParam) {
-			const source = $myMints || [];
-			const mint = source.find((m) => m.id === mintParam);
-
-			console.log(mint);
-			return mint;
-		}
-
-		return null;
-	});
-
-	(function () {
-		mintCollection();
-	})();
+	// TODO: create preopen state
+	/* let searchParams = $page.url.searchParams;
+	let mintParam = searchParams.get('m'); */
 
 	let activeTab = $state<'mine' | 'received'>('mine');
 	let subTab = $state<'active' | 'inactive'>('active');
-	let selectedMint = $state<Mint | null>(mintCollection());
+	let selectedMint = $state<Mint | null>();
 	let showShareModal = $state(false);
 
 	// Estado para mantener los filtros de caducidad actualizados
@@ -52,34 +38,8 @@
 
 	// --- FILTROS ---
 	let filteredMints = $derived(() => {
-		// Mock de dependencia de 'now' para forzar reactividad si fuera necesario
-		// aunque isExpired(m.expiresAt) ya comparará con el Date.now() actual
-		// pero tener 'now' como dependencia reactiva es más robusto en Svelte 5.
-		const _currentNow = now;
-
-		if (activeTab === 'mine') {
-			const source = $myMints || [];
-			if (subTab === 'active') {
-				return source.filter((m) => m.status === 'active' && !isExpired(m.expiresAt));
-			} else {
-				return source.filter((m) => m.status === 'redeemed' || isExpired(m.expiresAt));
-			}
-		} else {
-			const source = $collection || [];
-			if (subTab === 'active') {
-				return source.filter((m) => m.status === 'active' && !isExpired(m.expiresAt));
-			} else {
-				return source.filter((m) => m.status === 'used' || isExpired(m.expiresAt));
-			}
-		}
-	});
-
-	// Etiquetas dinámicas para las sub-tabs
-	let subTabLabels = $derived(() => {
-		if (activeTab === 'mine') {
-			return { active: 'Vigentes', inactive: 'Finalizadas' };
-		}
-		return { active: 'Disponibles', inactive: 'Usadas' };
+		if (activeTab === 'mine') return $myMints || [];
+		else return $collection || [];
 	});
 
 	function handleMintClick(mint: Mint) {
@@ -117,49 +77,24 @@
 
 <div>
 	<!-- HEADER -->
-	<header class="sticky top-0 z-30 border-b border-light/10 bg-dark/70 p-6 backdrop-blur">
+	<header class="sticky top-0 z-30 p-6">
 		<!-- TABS -->
-		<div class="flex rounded-full bg-light/5 p-1 ring-1 ring-light/10">
+		<div class="flex rounded-full border border-light/10 bg-dark/70 p-1 backdrop-blur">
 			<button
 				onclick={() => (activeTab = 'mine')}
-				class="flex-1 rounded-full py-2 text-sm font-semibold transition-all"
-				class:bg-light={activeTab === 'mine'}
-				class:text-dark={activeTab === 'mine'}
+				class="flex-1 rounded-full border-light/20 py-2 text-sm font-semibold"
+				class:border={activeTab === 'mine'}
 				class:text-neutral-400={activeTab !== 'mine'}
 			>
 				Mías ({($myMints || []).length})
 			</button>
 			<button
-				onclick={() => {
-					activeTab = 'received';
-					subTab = 'active';
-				}}
-				class="flex-1 rounded-full py-2 text-sm font-semibold transition-all"
-				class:bg-light={activeTab === 'received'}
-				class:text-dark={activeTab === 'received'}
-				class:text-neutral-400={activeTab !== 'received'}
+				onclick={() => (activeTab = 'received')}
+				class="flex-1 rounded-full border-light/20 py-2 text-sm font-semibold"
+				class:border={activeTab !== 'mine'}
+				class:text-neutral-400={activeTab === 'mine'}
 			>
 				Recibidas ({($collection || []).length})
-			</button>
-		</div>
-
-		<!-- SUB-TABS -->
-		<div class="mt-6 flex justify-center gap-16">
-			<button
-				onclick={() => (subTab = 'active')}
-				class="text-xs font-bold tracking-wider uppercase transition-all"
-				class:text-light={subTab === 'active'}
-				class:text-neutral-500={subTab !== 'active'}
-			>
-				{subTabLabels().active}
-			</button>
-			<button
-				onclick={() => (subTab = 'inactive')}
-				class="text-xs font-bold tracking-wider uppercase transition-all"
-				class:text-light={subTab === 'inactive'}
-				class:text-neutral-500={subTab !== 'inactive'}
-			>
-				{subTabLabels().inactive}
 			</button>
 		</div>
 	</header>
