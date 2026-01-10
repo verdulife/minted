@@ -51,9 +51,7 @@ export function encodeMint(mint: Mint): string {
  * Decompresses a string from a QR code back into a Mint object
  */
 export function decodeMint(encoded: string): ReceivedMint {
-  const url = new URL(encoded);
-  const base64Data = url.searchParams.get('m');
-  const data = base64Data ? JSON.parse(atob(base64Data)) : null;
+  const data = JSON.parse(encoded);
   const decompressed: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(data)) {

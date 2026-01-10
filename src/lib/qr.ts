@@ -10,9 +10,9 @@ export async function generateCardQR(card: Mint, customData?: string): Promise<s
   // Serializar la carta completa como JSON o usar data personalizada (comprimida)
   const data = customData || JSON.stringify(card);
   const base64Data = btoa(data);
-  console.log(base64Data);
 
   console.log(base64Data);
+
   const url = `https://minted-orcin.vercel.app/get?m=${base64Data}`;
 
   // Generar QR como Data URL (imagen base64)
