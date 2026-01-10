@@ -148,7 +148,7 @@
 						Se ha añadido <strong>{result.mint.title}</strong> a tu colección correctamente.
 					</p>
 					<button
-						onclick={() => goto('/' + result.mint.id)}
+						onclick={() => goto('/?id=' + result.mint.id)}
 						class="mb-3 w-full rounded-2xl bg-white py-4 text-sm font-bold text-black transition-all active:scale-95"
 					>
 						Ver Mint
