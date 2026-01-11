@@ -76,7 +76,6 @@
 	onMount(async () => {
 		if (mintPromise) {
 			selectedMint = await mintPromise;
-			console.log(selectedMint);
 		}
 	});
 </script>

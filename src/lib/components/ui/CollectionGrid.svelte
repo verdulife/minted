@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { type Mint } from '@/lib/db';
 	import CardThumbnail from '@/lib/components/ui/CardThumbnail.svelte';
-	import Card from '../3d/Card.svelte';
 
 	interface Props {
 		cards: Mint[];
@@ -12,7 +11,7 @@
 	let { cards, activeTab, onCardClick }: Props = $props();
 
 	function dateSort(a: Mint, b: Mint) {
-		return a.createdAt - b.createdAt;
+		return b.createdAt - a.createdAt;
 	}
 </script>
 
